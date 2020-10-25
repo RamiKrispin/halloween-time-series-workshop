@@ -598,8 +598,51 @@ class(tourism)</code></pre>
 ## 4 1998 Q4 Adelaide South Australia Business  127.
 ## 5 1999 Q1 Adelaide South Australia Business  137.
 ## 6 1999 Q2 Adelaide South Australia Business  200.</code></pre>
+<p>Where in this case, the <code>Quarter</code> column defines the series <code>index</code> and the <code>Region</code>, <code>State</code>, and <code>Purpose</code> columns defines the series <code>key</code>:</p>
 <pre class="r"><code>index(tourism)</code></pre>
 <pre><code>## Quarter</code></pre>
+<pre class="r"><code>key(tourism)</code></pre>
+<pre><code>## [[1]]
+## Region
+## 
+## [[2]]
+## State
+## 
+## [[3]]
+## Purpose</code></pre>
+<pre class="r"><code>key_vars(tourism)</code></pre>
+<pre><code>## [1] &quot;Region&quot;  &quot;State&quot;   &quot;Purpose&quot;</code></pre>
+<pre class="r"><code>key_data(tourism) %&gt;% head()</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   Region         State           Purpose        .rows
+##   &lt;chr&gt;          &lt;chr&gt;           &lt;chr&gt;    &lt;list&lt;int&gt;&gt;
+## 1 Adelaide       South Australia Business        [80]
+## 2 Adelaide       South Australia Holiday         [80]
+## 3 Adelaide       South Australia Other           [80]
+## 4 Adelaide       South Australia Visiting        [80]
+## 5 Adelaide Hills South Australia Business        [80]
+## 6 Adelaide Hills South Australia Holiday         [80]</code></pre>
+<p>This one of the cases the interaction between <strong>dplyr</strong> and <strong>tsibble</strong> is super useful:</p>
+<pre class="r"><code>sydney &lt;- tourism %&gt;% filter(State == &quot;New South Wales&quot;,
+                             Region == &quot;Sydney&quot;,
+                             Purpose == &quot;Holiday&quot;)
+
+head(sydney)</code></pre>
+<pre><code>## # A tsibble: 6 x 5 [1Q]
+## # Key:       Region, State, Purpose [1]
+##   Quarter Region State           Purpose Trips
+##     &lt;qtr&gt; &lt;chr&gt;  &lt;chr&gt;           &lt;chr&gt;   &lt;dbl&gt;
+## 1 1998 Q1 Sydney New South Wales Holiday  828.
+## 2 1998 Q2 Sydney New South Wales Holiday  531.
+## 3 1998 Q3 Sydney New South Wales Holiday  503.
+## 4 1998 Q4 Sydney New South Wales Holiday  580.
+## 5 1999 Q1 Sydney New South Wales Holiday  465.
+## 6 1999 Q2 Sydney New South Wales Holiday  534.</code></pre>
+<pre class="r"><code>key_data(sydney)</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   Region State           Purpose       .rows
+## * &lt;chr&gt;  &lt;chr&gt;           &lt;chr&gt;   &lt;list&lt;int&gt;&gt;
+## 1 Sydney New South Wales Holiday        [80]</code></pre>
 </div>
 </div>
 

@@ -172,8 +172,27 @@ class(tourism)
 head(tourism)
 ```
 
+Where in this case, the `Quarter` column defines the series `index` and the `Region`, `State`, and `Purpose` columns defines the series `key`:
+
 ```{r}
 index(tourism)
+
+key(tourism)
+
+key_vars(tourism)
+
+key_data(tourism) %>% head()
 ```
 
+This one of the cases the interaction between **dplyr** and **tsibble** is super useful:
+
+```{r}
+sydney <- tourism %>% filter(State == "New South Wales",
+                             Region == "Sydney",
+                             Purpose == "Holiday")
+
+head(sydney)
+
+key_data(sydney)
+```
 
