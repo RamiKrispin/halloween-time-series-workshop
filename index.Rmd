@@ -1,0 +1,13 @@
+---
+title: "Halloween Time Series Workshop"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+Materials for the Bay Area useR Group meetup halloween-time-series-workshop
