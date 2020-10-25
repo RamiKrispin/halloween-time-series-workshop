@@ -9,6 +9,8 @@ navbar:
       menu:
       - text: "Time Series Objects"
         href: 01-time-series-objects/time_series_objects.html
+      - text: "Plotting Time Series Objects"
+        href: 02-plotting-ts-objects/plotting_ts_objects.html
 output_dir: "docs"
 output:
   html_document:
