@@ -6,25 +6,139 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.height=5, 
+                      fig.width=8, 
+                      message=FALSE, 
+                      warning=FALSE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Currently, the main method for visualize `tsibble` objects is with the `autoplot` function from [fabletools](https://fabletools.tidyverts.org/) / [ggplot2](https://ggplot2.tidyverse.org/reference/index.html) packages to create auto-plots of `tsibble` objects.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Let's load and transform the natural gas consumption in the US into tsibble object and plot it:
 
-```{r cars}
-summary(cars)
+```{r }
+library(tsibble)
+library(fabletools)
+library(dplyr)
+
+naturalgas_path <- paste(rprojroot::find_rstudio_root_file(), "data", "NATURALGAS.csv", sep = "/")
+
+us_gas <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(date = yearmonth(as.Date(date))) %>%
+  as_tsibble(index = "date")
+
+us_gas %>% autoplot(.vars = y) 
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+As the `autoplot` function exported from the **ggplot2** package, we can customize the plot and add additional layers using any of the **ggplot2**  package functionality: 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+library(ggplot2)
+
+us_gas %>% autoplot(.vars = y) + 
+  xlab("Source: U.S. Bureau of Transportation Statistics, Natural Gas Consumption [NATURALGAS]") + 
+  ylab("Billion Cubic Feet") + 
+  ggtitle("US Natural Gas Consumption (Not Seasonally Adjusted)")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Last but not least, we can convert the plot into a plotly object using the `ggplotly` function from the [plotly](https://plotly.com/r/) package: 
+
+```{r}
+library(plotly)
+
+p <- us_gas %>% autoplot(.vars = y) + 
+  xlab("Source: U.S. Bureau of Transportation Statistics, Natural Gas Consumption [NATURALGAS]") + 
+  ylab("Billion Cubic Feet") + 
+  ggtitle("US Natural Gas Consumption (Not Seasonally Adjusted)")
+
+
+ggplotly(p)
+```
+
+
+### Plotting multiple time series objects
+
+The `autoplot` function automatically idenify the `tsibble` object `key`, if exists, and plot the series accordignlly. In the following example we will plot all trips to Sydney by trip type using the `tourism` dataset. Let's first subset the the dataset to all trips to region Sydney:
+
+```{r}
+data("tourism")
+
+sydney <- tourism %>% filter(Region == "Sydney")
+
+head(sydney)
+
+key_data(sydney)
+```
+
+As you can see from the output of the `key_data`, there are 4 unique series in the Sydney trips subset. We will now plot those series with the `autoplot` and `ggplot` funtions:
+
+```{r}
+p <- sydney %>% autoplot()
+
+ggplotly(p) %>%
+  layout(title = "Sydney Domestic Overnight Trups by Purpose",
+         yaxis = list(title = "Overnight Trips in Thousands"),
+         xaxis = list(title = "Source: tsibble package"))
+```
+
+
+### Interactive visualization with Plotly
+
+While the `ggplotly` function enables us to transform a static **ggplot2** plot into an interactive **plotly** object, it is harder to apply the `layout` functionality. An alternative approach would be to plot the object directly with the **plotly** package. Let's replot the consumption of natural gas in the US: 
+
+```{r}
+us_gas %>%
+ plot_ly(x = ~ date,
+         y = ~ y,
+          type = "scatter",
+          mode = "lines") %>%
+  layout(title = "US Natural Gas Consumption (Not Seasonally Adjusted)",
+         yaxis = list(title = "Billion Cubic Feet"),
+         xaxis = list(title = "Source: U.S. Bureau of Transportation Statistics, Natural Gas Consumption [NATURALGAS]"))
+```
+
+One thing to notice - the attribute of the object `index`, the `yearmon` class, is lost. One way to fix it is to convert the object `index` to a `Date` object:
+
+```{r}
+us_gas %>%
+ plot_ly(x = ~ as.Date(date),
+          y = ~ y,
+          type = "scatter",
+          mode = "lines") %>%
+  layout(title = "US Natural Gas Consumption (Not Seasonally Adjusted)",
+         yaxis = list(title = "Billion Cubic Feet"),
+         xaxis = list(title = "Source: U.S. Bureau of Transportation Statistics, Natural Gas Consumption [NATURALGAS]",
+                      type = "date",
+                      tickformat = "%b %Y"))
+```
+
+Similarly, we can plot the `sydney` series we created earlier by creating a unique id by the different series `key` columns, subset, and plot with the `add_lines` function:
+
+```{r}
+sydney$id <- do.call(paste, c(sydney[,key_vars(sydney)], sep = "|"))
+
+head(sydney)
+
+p <- plot_ly()
+
+for(i in unique(sydney$id)){
+  
+  df <- sydney %>% filter(id == i) 
+  
+  p <- p %>%
+    add_lines(x = as.Date(df$Quarter),
+              y = df$Trips,
+              type = "scatter",
+              mode = "lines",
+              name = i)
+}
+
+p %>% layout(legend = list(orientation = "h"))
+
+```
+
+
