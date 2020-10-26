@@ -6,25 +6,76 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.height=5, 
+                      fig.width=8, 
+                      message=FALSE, 
+                      warning=FALSE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Currently, the main method for visualize `tsibble` objects is with the `autoplot` function from [fabletools](https://fabletools.tidyverts.org/) / [ggplot2](https://ggplot2.tidyverse.org/reference/index.html) packages to create auto-plots of `tsibble` objects.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Let's load and transform the natural gas consumption in the US into tsibble object and plot it:
 
-```{r cars}
-summary(cars)
+```{r }
+library(tsibble)
+library(fabletools)
+library(dplyr)
+
+naturalgas_path <- paste(rprojroot::find_rstudio_root_file(), "data", "NATURALGAS.csv", sep = "/")
+
+us_gas <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(date = yearmonth(as.Date(date))) %>%
+  as_tsibble(index = "date")
+
+us_gas %>% autoplot(.vars = y) 
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+As the `autoplot` function exported from the **ggplot2** package, we can customize the plot and add additional layers using any of the **ggplot2**  package functionality: 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+library(ggplot2)
+
+us_gas %>% autoplot(.vars = y) + 
+  xlab("Source: U.S. Bureau of Transportation Statistics, Natural Gas Consumption [NATURALGAS]") + 
+  ylab("Billion Cubic Feet") + 
+  ggtitle("US Natural Gas Consumption (Not Seasonally Adjusted)")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Last but not least, we can convert the plot into a plotly object using the `ggplotly` function from the [plotly](https://plotly.com/r/) package: 
+
+```{r}
+library(plotly)
+
+p <- us_gas %>% autoplot(.vars = y) + 
+  xlab("Source: U.S. Bureau of Transportation Statistics, Natural Gas Consumption [NATURALGAS]") + 
+  ylab("Billion Cubic Feet") + 
+  ggtitle("US Natural Gas Consumption (Not Seasonally Adjusted)")
+
+
+ggplotly(p)
+```
+
+
+### Plotting multiple time series objects
+
+```{r}
+data("tourism")
+
+nsw_tourism <- tourism %>% filter(State == "New South Wales", Purpose == "Holiday")
+
+
+nsw_tourism <- tourism %>% filter(Region == "Sydney")
+
+head(nsw_tourism)
+
+key_data(nsw_tourism)
+```
+
+```{r}
+nsw_tourism %>% autoplot()
+```
+
