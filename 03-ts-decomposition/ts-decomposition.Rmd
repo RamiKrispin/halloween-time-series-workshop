@@ -4,7 +4,9 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.height=5, fig.width=8,
+                      message=FALSE, warning=FALSE)
 ```
 
 Generally, we can categorize patterns in time series data into the following two categories:
@@ -36,4 +38,65 @@ In this section, we will focus on decomposition methods of time series to its co
 
 ### Classical Decomposition
 
-The classical decomposition (or by its full name - classical seasonal decomposition by moving average)
+The classical decomposition (or by its full name - classical seasonal decomposition by moving average) is one of the most commom estimation method of the series components. R provides a built-in method for decompose time series with the `decompose` function from the **stats** package:
+
+```{r}
+data("AirPassengers")
+
+d <- decompose(AirPassengers)
+
+str(d)
+```
+
+
+```{r}
+plot(d)
+```
+
+
+```{r}
+d_m <- decompose(AirPassengers, type = "multiplicative")
+
+plot(d_m)
+```
+
+
+```{r }
+library(TSstudio)
+
+ts_decompose(AirPassengers, type = "both")
+```
+
+
+```{r}
+library(tsibble)
+library(feasts)
+library(fabletools)
+
+ap_tsibble <- as_tsibble(AirPassengers)
+
+decompose_md <- ap_tsibble %>% 
+  model(classical_decomposition(value, type = "multiplicative"))
+
+
+```
+
+
+
+```{r}
+decompose_md %>% 
+  components() %>% 
+  head()
+
+
+decompose_md %>% 
+  components() %>%
+  autoplot()
+```
+```{r}
+d_tsibble <- decompose_md$`classical_decomposition(value, type = "multiplicative")`[[1]]$fit$decomposition
+```
+
+### STL Decomposition
+
+WIP
