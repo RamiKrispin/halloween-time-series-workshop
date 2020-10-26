@@ -7,22 +7,33 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+Generally, we can categorize patterns in time series data into the following two categories:
+ 
+* **Structural patterns -** also known as the series components. There are three main components:
+    * trend - the series growth overtime
+    * cycle - repeated events over time that are not equally spaced
+    * seasonal - repeated events over time that are equally spaced
+* **Non-structural patterns -** also known as the irregular components, which is basically any pattern on the series that is not represented by the structural patterns. An example of such a pattern could be repeated events that are not seasonal (e.g., Easter or the Chinese New Year are both occurred every year, but the date is changing from year to year)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Those patterns are either exists or not (e.g., a series may have a trend or not). We can express those components using the following notation for additive structure:
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+$$Y_t=T_t + C_t + S_t + I_t, $$
 
-```{r cars}
-summary(cars)
-```
+And for multiplicative structure:
 
-## Including Plots
+$$Y_t=T_t \times C_t \times S_t \times I_t $$
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+For simplicity reasons, we will joined the cycle component into the trend, and rewrite the series components notation for additive structure:
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+$$Y_t=T_t + S_t + I_t, $$ 
+And for multiplicative structure:
+
+$$Y_t=T_t \times S_t \times I_t $$
+
+
+In this section, we will focus on decomposition methods of time series to its components - the trend, seasonal, and irregular.
+
+### Classical Decomposition
+
+The classical decomposition (or by its full name - classical seasonal decomposition by moving average)
