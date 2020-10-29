@@ -262,6 +262,8 @@ The STL (Seasonal and Trend decomposition using LOESS) method is an advanced dec
 
 In R, the `stl` function from the **stats** package is the main function for STL deecomposition of `ts` objects. The `STL` function from the **feasts** package provides a wraper for the `stl` function for `tsibble` objects.
 
+We will start with a low smoother of 5 lags for the trend, and will average the seasonal component using an inf window (i.e. using all the observations of the series) by setting `window='periodic'`:
+ 
 
 ```{r}
 ap_tsibble %>%
@@ -271,6 +273,14 @@ model(STL(value ~ trend(window=5) + season(window='periodic'),
   autoplot()
 ```
 
+You can notice from the trend ans seasonal component estimation above:
+
+* The trend component is not completed smoothed (as we used low order smoothing)
+* The seasonal component monotonic across all periods 
+
+
+Let's see the effect on the trend estimation when increating the `trend` argument `window`:
+
 ```{r}
 ap_tsibble %>%
 model(STL(value ~ trend(window=13) + season(window='periodic'),
@@ -279,6 +289,8 @@ model(STL(value ~ trend(window=13) + season(window='periodic'),
   autoplot()
 ```
 
+Similarly, we will change the `season` argument `window` to 7:
+
 ```{r}
 ap_tsibble %>%
 model(STL(value ~ trend(window=13) + season(window= 7),
@@ -286,6 +298,9 @@ model(STL(value ~ trend(window=13) + season(window= 7),
   components() %>%
   autoplot()
 ```
+
+
+As we will keep reducing the season window the better the STL model will capture the multiplicative seasonal of the series. It is recommanded not to reduce the window below to 5:
 
 ```{r}
 ap_tsibble %>%
