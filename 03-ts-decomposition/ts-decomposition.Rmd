@@ -254,15 +254,15 @@ decompose_md %>%
 
 ### STL Decomposition
 
-The STL (Seasonal and Trend decomposition using LOESS) method is an advanced decomosition approach which is based on the LOESS smoothing method (locally estimated scatterplot smoothing). The main advantage of the STL method (vs. the classical method) is the ability to control the smoothing period of both the trend and seasonal component. That become super useful series has a multiplicative seasonality. The STL main parameters:
+The STL (Seasonal and Trend decomposition using LOESS) method is an advanced decomposition approach which is based on the LOESS smoothing method (locally estimated scatterplot smoothing). The main advantage of the STL method (vs. the classical method) is the ability to control the smoothing period of both the trend and seasonal component. That becomes a super useful series that has a multiplicative seasonality. The STL main parameters:
 
-* Seasonal window - defines the number of years to use for calculate the seasonal component. A smalest number of years will enable to capture changes of the seasonal component over time (multiplicative seasonality). 
-* Trend window - defines the number of lags to use with the LOESS smoother. As the length of the window is higher the smoother the trend estimation
-* Robust - defines if to use regular or robust LOESS regression. The robust method is less sensitive for outliers in the data
+* **Seasonal window -** defines the number of years to use to calculate the seasonal component. The smallest number of years will enable us to capture the seasonal component changes over time (multiplicative seasonality)
+* **Trend window -** defines the number of lags to use with the LOESS smoother. As the length of the window is higher, the smoother the trend estimation
+* **Robust -** defines if to use regular or robust LOESS regression. The robust method is less sensitive for outliers in the data
 
-In R, the `stl` function from the **stats** package is the main function for STL deecomposition of `ts` objects. The `STL` function from the **feasts** package provides a wraper for the `stl` function for `tsibble` objects.
+In R, the `stl` function from the **stats** package is the main function for STL decomposition of `ts` objects. The `STL` function from the **feasts** package provides a wrapper for the `stl` function for `tsibble` objects.
 
-We will start with a low smoother of 5 lags for the trend, and will average the seasonal component using an inf window (i.e. using all the observations of the series) by setting `window='periodic'`:
+We will start with a low smoother of 5 lags for the trend and will average the seasonal component using an inf window (i.e., using all the observations of the series) by setting `window='periodic'`:
  
 
 ```{r}
@@ -273,7 +273,7 @@ model(STL(value ~ trend(window=5) + season(window='periodic'),
   autoplot()
 ```
 
-You can notice from the trend ans seasonal component estimation above:
+You can notice from the trend and seasonal component estimation above:
 
 * The trend component is not completed smoothed (as we used low order smoothing)
 * The seasonal component monotonic across all periods 
@@ -300,7 +300,7 @@ model(STL(value ~ trend(window=13) + season(window= 7),
 ```
 
 
-As we will keep reducing the season window the better the STL model will capture the multiplicative seasonal of the series. It is recommanded not to reduce the window below to 5:
+As we will keep reducing the season window, the better the STL model will capture the series's multiplicative seasonality. It is recommended not to reduce the `window` below to 5:
 
 ```{r}
 ap_tsibble %>%
