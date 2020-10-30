@@ -64,6 +64,7 @@ us_gas %>% plot_ly(x = ~ as.Date(date),
 
 
 #### Decomposing the Series
+
 We can leverage the `classical_decomposition` function to decompose the series to the trend, seasonal and irregular components:
 
 ```{r}
@@ -131,7 +132,7 @@ us_gas %>%
           pointpos = -1.8)
 ```
 
-While we can see a clear seasonal pattern, the distribution of each month is fairly wide. This is mainly due to the year over year growth (or the series trend). We can reduce the growth impact by detrend the series and replot the seasonal box-plot. We will use the `classical_decomposition` and `model` functions from the **feast** and **fabletools** packages, respectivlly:
+While we can see a clear seasonal pattern, the distribution of each month is fairly wide. This is mainly due to the year over year growth (or the series trend). We can reduce the growth impact by detrend the series and replot the seasonal box-plot. We will use the `classical_decomposition` and `model` functions from the **feasts** and **fabletools** packages, respectivlly:
 
 ```{r}
 us_gas_comp <- us_gas %>% 
@@ -158,8 +159,10 @@ us_gas %>%
 
 After reducing the trend impact, the monthly distribution, as expected, is narrowing down, and we can see a clear seasonal pattern.
 
-#### YoY Plot
+#### Seasonal Plot
 
+The seasonal plot splits the series by its seasonal cycle (year) and compare the change between each cycle (or from year to year). In the following example we will create a seasonal plot with plotly:
+ 
 ```{r}
 p <- plot_ly() 
 
@@ -184,6 +187,9 @@ for(i in seq_along(years)){
 p
 ```
 
+**Note:** that we use a color scale to mark the years. This enables us to quickly observe the growth in the series from year to year, and the seasonal patter. 
+
+Similarly, we can split the series by it's frequency units and plot each frequency unit against the frequency cycle (e.g., year):
 
 ```{r}
 p <- plot_ly()
@@ -207,6 +213,8 @@ p
 
 #### Heatmap
 
+Heatmap is another visualization tool for review and identify seasonal pattern in a series:
+
 ```{r}
 us_gas_df <- us_gas %>%
   as.data.frame() %>%
@@ -225,7 +233,9 @@ plot_ly(x = names(us_gas_df)[-1],
 ```
 
 
+#### Kernel Density Plot
 
+Likewise the box-plot seasonal plot, we can use the kernel density plot to visualize the series frequency units distribution. A simple method is to use the **ggplot2** package `geom_density` function:
 
 ```{r}
 ggplot(us_gas, aes(x = y)) +
@@ -233,11 +243,17 @@ geom_density(aes(fill = month)) +
 ggtitle("US Gas - Kernel Density Estimates by Month") + facet_grid(rows = vars(as.factor(month)))
 ```
 
+As before, the detreded series should have narrow distribution:
+
 ```{r}
 ggplot(us_gas, aes(x = detrend)) +
 geom_density(aes(fill = month)) +
 ggtitle("US Gas - Kernel Density Estimates by Month") + facet_grid(rows = vars(as.factor(month)))
 ```
+
+#### feasts Seasonal Plots
+
+The **feasts** package provides some built-in functions for seasonal plots of `tsibble` objects based on the **ggplot2** package. The `gg_season` function create a seasonal plot by the series frequency cycles units. By default, the function label each line by its frequency cycle unit:
 
 ```{r}
 us_gas %>%
@@ -247,6 +263,7 @@ gg_season(y, labels = "both") +
   ggtitle("US Natural Gas Consumption Seasonal Plot")
 ```
 
+The `gg_subseries` split and plot each frequency unit aginst its frequency cycle unit:
 
 
 ```{r}
