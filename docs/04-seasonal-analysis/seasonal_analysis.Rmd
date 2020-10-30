@@ -1,11 +1,186 @@
 ---
-title: "Seasonal Analysis"
+title: "Seasonality Analysis"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.height=5, fig.width=8,
+                      message=FALSE, warning=FALSE)
 ```
 
-### WIP
+Time series seasonal analysis is one of the core foundations of time series analysis. Generally, a time series could either have or not a seasonal component. If 
+
+```{r}
+library(tsibble)
+library(dplyr)
+library(lubridate)
+library(plotly)
+library(ggplot2)
+library(fabletools)
+library(feasts)
+
+naturalgas_path <- paste(rprojroot::find_rstudio_root_file(), "data", "NATURALGAS.csv", sep = "/")
+
+us_gas <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(date = yearmonth(as.Date(date))) %>%
+  as_tsibble(index = "date")
+
+
+head(us_gas)
+```
+
+```{r }
+us_gas %>% plot_ly(x = ~ as.Date(date),
+                   y = ~ y,
+                   type = "scatter",
+                   mode = "line",
+                   name = "US Natural Gas") %>%
+  layout(title = "US Natural Gas Consumption (Not Seasonally Adjusted)",
+         yaxis = list(title = "Billion Cubic Feet"),
+         xaxis = list(title = paste("Source: U.S. Bureau of Transportation Statistics,", "<br>" ,
+                                    "Natural Gas Consumption [NATURALGAS]", sep = "")),
+         hovermode = "compare")
+
+```
+
+
+```{r}
+us_gas <- us_gas %>%
+  mutate(year = year(date),
+         month = month(date, label = TRUE))
+
+head(us_gas)
+```
+
+```{r}
+us_gas %>% 
+  as.data.frame() %>%
+  group_by(year) %>%
+  summarise(avg = mean(y)) %>%
+  plot_ly(x = ~ year,
+          y = ~ avg,
+          type = "scatter",
+          mode = "line")
+```
+
+```{r}
+us_gas %>% 
+  as.data.frame() %>%
+  group_by(month) %>%
+  summarise(avg = mean(y))
+```
+
+```{r}
+us_gas %>% 
+  plot_ly(x = ~month, y = ~ y, 
+          type = "box", 
+          color = ~month, 
+          colors = "Dark2",
+          boxpoints = "all", 
+          jitter = 0.3,
+          pointpos = -1.8)
+```
+
+
+```{r}
+us_gas_comp <- us_gas %>% 
+  model(classical_decomposition(y)) %>%
+  components() 
+
+us_gas <- us_gas %>% 
+  left_join(us_gas_comp %>% select(date, trend)) %>%
+  mutate(detrend = y - trend)
+```
+
+```{r}
+us_gas %>% 
+  plot_ly(x = ~month, y = ~ detrend, 
+          type = "box", 
+          color = ~month, 
+          colors = "Dark2",
+          boxpoints = "all", 
+          jitter = 0.3,
+          pointpos = -1.8)
+```
+
+
+```{r}
+p <- plot_ly() 
+
+for(i in unique(us_gas$year)){
+  y <- NULL
+  
+  y <- us_gas %>% 
+    as.data.frame() %>%
+    filter(year == i)
+  
+  p <- p %>% add_lines(x = y$month,
+                       y = y$y,
+                       name = i)
+  
+}
+
+p
+```
+
+
+```{r}
+p <- plot_ly()
+
+for(i in unique(us_gas$month)){
+  m <- NULL
+  
+  m <- us_gas %>%
+    as.data.frame() %>%
+    filter(month == i)
+  
+  p <- p %>% 
+    add_lines(x = m$year,
+              y = m$y,
+              name = i)
+}
+
+p
+```
+
+
+
+
+```{r}
+us_gas_df <- us_gas %>%
+  as.data.frame() %>%
+  select(year, month, y) %>%
+  tidyr::pivot_wider(names_from = year,
+                     values_from = y)
+
+
+plot_ly(x = names(us_gas_df)[-1],
+        y = us_gas_df$month,
+        z = as.matrix(us_gas_df[, -1]),
+        colors = "Reds",
+        xgap = 3,
+        ygap = 3,
+        type = "heatmap")
+```
+
+
+```{r}
+us_gas %>%
+gg_season(y, labels = "both") +
+  ylab("Billion Cubic Feet") +
+  xlab("Month") +
+  ggtitle("US Natural Gas Consumption Seasonal Plot")
+```
+
+
+
+```{r}
+us_gas %>%
+  gg_subseries(y) +
+    ylab("Billion Cubic Feet") +
+    xlab("Year") +
+    ggtitle("US Natural Gas Consumption by Month")
+```
 
