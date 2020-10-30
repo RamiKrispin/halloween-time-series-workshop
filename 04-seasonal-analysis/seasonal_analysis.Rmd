@@ -1,11 +1,259 @@
 ---
-title: "Seasonal Analysis"
+title: "Seasonality Analysis"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.height=5, fig.width=8,
+                      message=FALSE, warning=FALSE)
 ```
 
-### WIP
+Time series seasonal analysis is one of the core foundations of time series analysis. Generally, a time series could either have a seasonal component or not. In addition, a series could have more than one seasonal pattern, for example:
+
+* Daily series could have both day of the year and day of the week seasonal patterns
+* Hourly series could have both hourly, daily, monthly seasonal patterns
+
+In this section we will focus on time series with a single seasonality pattern. In the following examples, we will use the the US monthly consumption of natural gas.
+
+One of the main tools for exploring seasonality is data visualization. Another simplistic but useful is summary statistics tables.
+
+```{r}
+library(tsibble)
+library(dplyr)
+library(lubridate)
+library(plotly)
+library(ggplot2)
+library(viridis)
+library(fabletools)
+library(feasts)
+```
+
+#### Data
+
+First, let's load the series and reformat it into `tsibble` object:
+
+```{r}
+naturalgas_path <- paste(rprojroot::find_rstudio_root_file(), "data", "NATURALGAS.csv", sep = "/")
+
+us_gas <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(date = yearmonth(as.Date(date))) %>%
+  as_tsibble(index = "date")
+
+
+head(us_gas)
+```
+
+
+Just by eyeballing on the series plot you idenifty the strong seasonal pattern: 
+
+```{r }
+us_gas %>% plot_ly(x = ~ as.Date(date),
+                   y = ~ y,
+                   type = "scatter",
+                   mode = "line",
+                   name = "US Natural Gas") %>%
+  layout(title = "US Natural Gas Consumption (Not Seasonally Adjusted)",
+         yaxis = list(title = "Billion Cubic Feet"),
+         xaxis = list(title = paste("Source: U.S. Bureau of Transportation Statistics,", "<br>" ,
+                                    "Natural Gas Consumption [NATURALGAS]", sep = "")),
+         hovermode = "compare")
+
+```
+
+
+#### Decomposing the Series
+We can leverage the `classical_decomposition` function to decompose the series to the trend, seasonal and irregular components:
+
+```{r}
+us_gas %>% 
+  model(classical_decomposition(y)) %>%
+  components() %>% 
+  autoplot()
+```
+
+
+#### Summary Statistics
+
+We will start with summary statistics tables by calculating:
+
+* Yearly average
+* Monthly average
+
+
+We will create time features with the `year` and `month` functions from the **lubridate** package that enables us group by those features:
+
+```{r}
+us_gas <- us_gas %>%
+  mutate(year = year(date),
+         month = month(date, label = TRUE))
+
+head(us_gas)
+```
+
+The year average could provide us insighs about change in the trend direction. This information can observed also from the decompose function:
+
+```{r}
+us_gas %>% 
+  as.data.frame() %>%
+  group_by(year) %>%
+  summarise(avg = mean(y)) %>%
+  plot_ly(x = ~ year,
+          y = ~ avg,
+          type = "scatter",
+          mode = "line")
+```
+
+If a series has a strong trend it may shadow some of the series seasonality. In this case, you can either use short part of the series or detrend the series.
+
+The next summary is by the main frequency units - the month of the year:
+
+```{r}
+us_gas %>% 
+  as.data.frame() %>%
+  group_by(month) %>%
+  summarise(avg = mean(y))
+```
+
+#### Box-plot plots
+
+A box plot is a useful method to visualize distibution of the series observations by its frequency units:
+
+```{r}
+us_gas %>% 
+  plot_ly(x = ~month, y = ~ y, 
+          type = "box", 
+          color = ~month, 
+          colors = "Dark2",
+          boxpoints = "all", 
+          jitter = 0.3,
+          pointpos = -1.8)
+```
+
+While we can see a clear seasonal pattern, the distribution of each month is fairly wide. This is mainly due to the year over year growth (or the series trend). We can reduce the growth impact by detrend the series and replot the seasonal box-plot. We will use the `classical_decomposition` and `model` functions from the **feast** and **fabletools** packages, respectivlly:
+
+```{r}
+us_gas_comp <- us_gas %>% 
+  model(classical_decomposition(y)) %>%
+  components() 
+
+us_gas <- us_gas %>% 
+  left_join(us_gas_comp %>% select(date, trend)) %>%
+  mutate(detrend = y - trend)
+```
+
+Let's replot the series monthly distribution, this time using the detrended series:
+
+```{r}
+us_gas %>% 
+  plot_ly(x = ~month, y = ~ detrend, 
+          type = "box", 
+          color = ~month, 
+          colors = "Dark2",
+          boxpoints = "all", 
+          jitter = 0.3,
+          pointpos = -1.8)
+```
+
+After reducing the trend impact, the monthly distribution, as expected, is narrowing down, and we can see a clear seasonal pattern.
+
+#### YoY Plot
+
+```{r}
+p <- plot_ly() 
+
+years <- unique(us_gas$year)
+
+colors <- viridis::viridis(n = length(years))
+
+for(i in seq_along(years)){
+  y <- NULL
+  
+  y <- us_gas %>% 
+    as.data.frame() %>%
+    filter(year == years[i])
+  
+  p <- p %>% add_lines(x = y$month,
+                       y = y$y,
+                       line = list(color = colors[i]),
+                       name = years[i])
+  
+}
+
+p
+```
+
+
+```{r}
+p <- plot_ly()
+
+for(i in unique(us_gas$month)){
+  m <- NULL
+  
+  m <- us_gas %>%
+    as.data.frame() %>%
+    filter(month == i)
+  
+  p <- p %>% 
+    add_lines(x = m$year,
+              y = m$y,
+              name = i)
+}
+
+p
+```
+
+
+#### Heatmap
+
+```{r}
+us_gas_df <- us_gas %>%
+  as.data.frame() %>%
+  select(year, month, y) %>%
+  tidyr::pivot_wider(names_from = year,
+                     values_from = y)
+
+
+plot_ly(x = names(us_gas_df)[-1],
+        y = us_gas_df$month,
+        z = as.matrix(us_gas_df[, -1]),
+        colors = "Reds",
+        xgap = 3,
+        ygap = 3,
+        type = "heatmap")
+```
+
+
+
+
+```{r}
+ggplot(us_gas, aes(x = y)) +
+geom_density(aes(fill = month)) +
+ggtitle("US Gas - Kernel Density Estimates by Month") + facet_grid(rows = vars(as.factor(month)))
+```
+
+```{r}
+ggplot(us_gas, aes(x = detrend)) +
+geom_density(aes(fill = month)) +
+ggtitle("US Gas - Kernel Density Estimates by Month") + facet_grid(rows = vars(as.factor(month)))
+```
+
+```{r}
+us_gas %>%
+gg_season(y, labels = "both") +
+  ylab("Billion Cubic Feet") +
+  xlab("Month") +
+  ggtitle("US Natural Gas Consumption Seasonal Plot")
+```
+
+
+
+```{r}
+us_gas %>%
+  gg_subseries(y) +
+    ylab("Billion Cubic Feet") +
+    xlab("Year") +
+    ggtitle("US Natural Gas Consumption by Month")
+```
 
