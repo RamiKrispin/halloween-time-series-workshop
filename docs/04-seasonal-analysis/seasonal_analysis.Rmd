@@ -14,7 +14,7 @@ Time series seasonal analysis is one of the core foundations of time series anal
 * Daily series could have both day of the year and day of the week seasonal patterns
 * Hourly series could have both hourly, daily, monthly seasonal patterns
 
-In this section we will focus on time series with a single seasonality pattern. In the following examples, we will use the the US monthly consumption of natural gas.
+In this section, we will focus on time series with a single seasonality pattern. In the following examples, we will use the US monthly consumption of natural gas.
 
 One of the main tools for exploring seasonality is data visualization. Another simplistic but useful is summary statistics tables.
 
@@ -46,7 +46,7 @@ head(us_gas)
 ```
 
 
-Just by eyeballing on the series plot you idenifty the strong seasonal pattern: 
+Just by eyeballing the series plot, you can identify the strong seasonal pattern: 
 
 ```{r }
 us_gas %>% plot_ly(x = ~ as.Date(date),
@@ -77,13 +77,13 @@ us_gas %>%
 
 #### Summary Statistics
 
-We will start with summary statistics tables by calculating:
+We will start with the summary statistics tables by calculating:
 
 * Yearly average
 * Monthly average
 
 
-We will create time features with the `year` and `month` functions from the **lubridate** package that enables us group by those features:
+We will create time features with the `year` and `month` functions from the **lubridate** package that enables us to group by those features:
 
 ```{r}
 us_gas <- us_gas %>%
@@ -93,7 +93,7 @@ us_gas <- us_gas %>%
 head(us_gas)
 ```
 
-The year average could provide us insighs about change in the trend direction. This information can observed also from the decompose function:
+The year average could provide us insights about change in the trend direction. This information can also be observed from the decompose function:
 
 ```{r}
 us_gas %>% 
@@ -119,7 +119,7 @@ us_gas %>%
 
 #### Box-plot plots
 
-A box plot is a useful method to visualize distibution of the series observations by its frequency units:
+A box plot is a useful method to visualize the distribution of the series observations by its frequency units:
 
 ```{r}
 us_gas %>% 
@@ -132,7 +132,7 @@ us_gas %>%
           pointpos = -1.8)
 ```
 
-While we can see a clear seasonal pattern, the distribution of each month is fairly wide. This is mainly due to the year over year growth (or the series trend). We can reduce the growth impact by detrend the series and replot the seasonal box-plot. We will use the `classical_decomposition` and `model` functions from the **feasts** and **fabletools** packages, respectivlly:
+While we can see a clear seasonal pattern, the distribution of each month is fairly wide. This is mainly due to the year over year growth (or the series trend). We can reduce the growth impact by detrending the series and replot the seasonal box-plot. We will use the `classical_decomposition` and `model` functions from the **feasts** and **fabletools** packages, respectively:
 
 ```{r}
 us_gas_comp <- us_gas %>% 
@@ -161,7 +161,7 @@ After reducing the trend impact, the monthly distribution, as expected, is narro
 
 #### Seasonal Plot
 
-The seasonal plot splits the series by its seasonal cycle (year) and compare the change between each cycle (or from year to year). In the following example we will create a seasonal plot with plotly:
+The seasonal plot splits the series by its seasonal cycle (year) and compares changes in each cycle (or from year to year). In the following example, we will create a seasonal plot with plotly:
  
 ```{r}
 p <- plot_ly() 
@@ -187,9 +187,9 @@ for(i in seq_along(years)){
 p
 ```
 
-**Note:** that we use a color scale to mark the years. This enables us to quickly observe the growth in the series from year to year, and the seasonal patter. 
+**Note:** that we use a color scale to mark the years. This enables us to quickly observe the series' growth from year to year and the seasonal pattern. 
 
-Similarly, we can split the series by it's frequency units and plot each frequency unit against the frequency cycle (e.g., year):
+Similarly, we can split the series by its frequency units and plot each frequency unit against the frequency cycle (e.g., year):
 
 ```{r}
 p <- plot_ly()
@@ -213,7 +213,7 @@ p
 
 #### Heatmap
 
-Heatmap is another visualization tool for review and identify seasonal pattern in a series:
+Heatmap is another visualization tool for reviewing and identifying a seasonal pattern in a series:
 
 ```{r}
 us_gas_df <- us_gas %>%
@@ -235,7 +235,7 @@ plot_ly(x = names(us_gas_df)[-1],
 
 #### Kernel Density Plot
 
-Likewise the box-plot seasonal plot, we can use the kernel density plot to visualize the series frequency units distribution. A simple method is to use the **ggplot2** package `geom_density` function:
+Likewise in the box-plot seasonal plot, we can use the kernel density plot to visualize the series frequency units distribution. A simple method is to use the **ggplot2** package `geom_density` function:
 
 ```{r}
 ggplot(us_gas, aes(x = y)) +
@@ -243,7 +243,7 @@ geom_density(aes(fill = month)) +
 ggtitle("US Gas - Kernel Density Estimates by Month") + facet_grid(rows = vars(as.factor(month)))
 ```
 
-As before, the detreded series should have narrow distribution:
+As before, the detrended series should have narrow distribution:
 
 ```{r}
 ggplot(us_gas, aes(x = detrend)) +
@@ -251,9 +251,9 @@ geom_density(aes(fill = month)) +
 ggtitle("US Gas - Kernel Density Estimates by Month") + facet_grid(rows = vars(as.factor(month)))
 ```
 
-#### feasts Seasonal Plots
+#### Seasonal Plots with the feasts Package
 
-The **feasts** package provides some built-in functions for seasonal plots of `tsibble` objects based on the **ggplot2** package. The `gg_season` function create a seasonal plot by the series frequency cycles units. By default, the function label each line by its frequency cycle unit:
+The **feasts** package provides some built-in functions for seasonal plots of `tsibble` objects based on the **ggplot2** package. The `gg_season` function creates a seasonal plot by the series frequency cycle units. By default, the function labels each line by its frequency cycle unit:
 
 ```{r}
 us_gas %>%
