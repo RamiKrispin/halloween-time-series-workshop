@@ -1,0 +1,45 @@
+---
+title: "Decomposition of Time Series Solutions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.height=5, fig.width=8,
+                      message=FALSE, warning=FALSE)
+```
+
+#### Classical Decomposition
+
+```{r}
+library(dplyr)
+library(tsibble)
+library(fabletools)
+library(feasts)
+
+
+naturalgas_path <- paste(rprojroot::find_rstudio_root_file(), "data", "NATURALGAS.csv", sep = "/")
+
+us_gas <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(date = yearmonth(as.Date(date))) %>%
+  as_tsibble(index = "date")
+
+us_gas %>%
+   model(classical_decomposition(y)) %>%
+  components() %>%
+  autoplot()
+  
+```
+
+
+#### STL Decomposition
+
+```{r}
+us_gas %>%
+model(STL(y ~ trend(window=13) + season(window='periodic'),
+    robust = TRUE)) %>%
+  components() %>%
+  autoplot()
+```
+

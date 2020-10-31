@@ -1,0 +1,57 @@
+---
+title: "Time Series Objects Solutions"
+author: '@Rami_Krispin'
+date: "10/31/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#### Exercise 1
+
+```{r}
+library(tsibble)
+library(dplyr)
+
+us_abs_path <- paste(rprojroot::find_rstudio_root_file(), "data", "Alcoholic Beverages Sales.csv", sep = "/")
+
+us_abs <- read.csv(us_abs_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) 
+
+head(us_abs)
+```
+
+Converting the object to `tsibble` object:
+
+```{r}
+us_abs_ts <- us_abs %>%
+  mutate(index = yearmonth(as.Date(date))) %>%
+  select(-date) %>%
+  as_tsibble(index = index)
+```
+
+#### Exercise 2
+
+Loading the data
+
+```{r}
+ca_elec_path <- paste(rprojroot::find_rstudio_root_file(), "data", "ca_elec.rda", sep = "/")
+
+load(ca_elec_path)
+
+head(ca_elec)
+```
+
+Converting to `tsibble` object:
+
+```{r}
+ca_elec_ts <- ca_elec %>%
+  as_tsibble(index = date_time, key = operator)
+
+
+head(ca_elec_ts)
+```
+

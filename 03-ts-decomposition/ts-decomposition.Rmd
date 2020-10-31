@@ -309,3 +309,19 @@ model(STL(value ~ trend(window=13) + season(window= 5),
   components() %>%
   autoplot()
 ```
+
+
+### Exercises
+
+Let's decompose the natural gas series using both the classical and STL methods:
+
+```{r}
+naturalgas_path <- paste(rprojroot::find_rstudio_root_file(), "data", "NATURALGAS.csv", sep = "/")
+
+us_gas <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(date = yearmonth(as.Date(date))) %>%
+  as_tsibble(index = "date")
+
+head(us_gas)
+```

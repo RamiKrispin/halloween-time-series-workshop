@@ -141,4 +141,26 @@ p %>% layout(legend = list(orientation = "h"))
 
 ```
 
+#### Exercise 1
+
+```{r}
+us_abs_path <- paste(rprojroot::find_rstudio_root_file(), "data", "Alcoholic Beverages Sales.csv", sep = "/")
+
+us_abs <- read.csv(us_abs_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(index = yearmonth(as.Date(date))) %>%
+  select(-date) %>%
+  as_tsibble(index = index)
+```
+
+#### Exercise 2
+
+```{r}
+ca_elec_path <- paste(rprojroot::find_rstudio_root_file(), "data", "ca_elec.rda", sep = "/")
+
+load(ca_elec_path)
+
+ca_elec_ts <- ca_elec %>%
+  as_tsibble(index = date_time, key = operator)
+```
 

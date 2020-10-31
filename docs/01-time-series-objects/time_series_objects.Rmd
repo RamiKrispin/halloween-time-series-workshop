@@ -58,11 +58,11 @@ frequency(AirPassengers)
 cycle(AirPassengers)
 ```
 
-## The tsibble class
+### The tsibble class
 
 The **tsibble** package provides a tidy data structure and tools for handling regular and irregular time series data. The `tsibble` class enables to store single and multiple time series objects in a `data.frame` / `tbl` format with time  awareness attributes.
 
-### The tsibble attributes
+#### The tsibble attributes
 
 The `tsibble` class has a table structure with time awareness. Its main attributes are:
 
@@ -90,7 +90,7 @@ The `tsibble` class has a table structure with time awareness. Its main attribut
 * `key` - optional, enables to represent multiple time series in a long format, by using single or multiple columns as series key/s
 
 
-### Creating a tsibble object
+#### Creating a tsibble object
 
 The `as_tsibble` function enables to convert data.frame or ts objects into a tsibble object. In the following example, we will load the [Natural Gas Consumption](https://fred.stlouisfed.org/series/NATURALGAS) series. This series represents the monthly consumption of natural gas in the US since January 2000:
 
@@ -139,7 +139,7 @@ key(us_gas_tsibble)
 Since we did not define a `key`, the object does not have a key.
 
 
-### Converting a ts object into a tsibble
+#### Converting a ts object into a tsibble
 
 The `as_tsibble` function enables to convet `ts` object to `tsibble`. We will use the function to convert the `AirPassegers` from a `ts` object to a `tsibble` object:
 
@@ -158,7 +158,7 @@ The function convert the ts object time vector into an index object.
 Note: as the time vector of the `ts` object can represent only two components of the timestamp (e.g., year and month, year and day, etc.), the transformation of the vector into a three or four components timestamp index (such as `Date` or other classes) might be ambiguous in some cases. 
 
 
-### Multiple time series object
+#### Multiple time series object
 
 The `tourism` dataset, from the **tsibble** package, is an example of multiple time series object in a long format. This series descibe the number of overnight trips per quarter across Australia by region, state and purpose: 
 
@@ -195,4 +195,36 @@ head(sydney)
 
 key_data(sydney)
 ```
+
+
+
+### Exercises
+
+Let's practice what we learned so far:
+
+* Load the Alcoholic Beverages Sales dataset from CSV file (`data` folder), reformat the timesampt to `yearmonth` and convert to `tsibble` object with the `as_tsibble` function
+
+```{r}
+us_abs_path <- paste(rprojroot::find_rstudio_root_file(), "data", "Alcoholic Beverages Sales.csv", sep = "/")
+
+us_abs <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) 
+
+head(us_abs)
+```
+
+
+
+* Load the California electricity production by provider dataset - `ca_elec.rda` file (also in `data` folder) and convert the `data.frame` object to `tsibble` object, where the `key` of the series should be the `operator` column
+
+```{r}
+ca_elec_path <- paste(rprojroot::find_rstudio_root_file(), "data", "ca_elec.rda", sep = "/")
+
+load(ca_elec_path)
+
+head(ca_elec)
+```
+
+
+
 
