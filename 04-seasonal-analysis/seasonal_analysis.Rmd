@@ -274,3 +274,17 @@ us_gas %>%
     ggtitle("US Natural Gas Consumption by Month")
 ```
 
+#### Exercise
+
+Create seasonal plots for the US Alcoholic Beverages Sales:
+
+```{r}
+us_abs_path <- paste(rprojroot::find_rstudio_root_file(), "data", "Alcoholic Beverages Sales.csv", sep = "/")
+
+us_abs <- read.csv(us_abs_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(index = yearmonth(as.Date(date))) %>%
+  select(-date) %>%
+  as_tsibble(index = index)
+```
+

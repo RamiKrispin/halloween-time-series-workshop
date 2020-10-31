@@ -1,0 +1,31 @@
+---
+title: "Seasonality Analysis Solutions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Seasonal Plots
+
+```{r fig.height=5, fig.width=8, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tsibble)
+library(fabletools)
+library(feasts)
+library(ggplot2)
+
+us_abs_path <- paste(rprojroot::find_rstudio_root_file(), "data", "Alcoholic Beverages Sales.csv", sep = "/")
+
+us_abs <- read.csv(us_abs_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) %>%
+  mutate(index = yearmonth(as.Date(date))) %>%
+  select(-date) %>%
+  as_tsibble(index = index)
+
+
+us_abs %>% gg_season(y, labels = "both") +
+  xlab("Month") +
+  ggtitle("US Alcoholic Beverages Salesl Plot")
+```
