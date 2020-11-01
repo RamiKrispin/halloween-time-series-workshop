@@ -6,8 +6,7 @@ navbar:
       icon: fa-home fa-lg
       href: index.html
     - text: "Resources"
-      icon: fa-info
-      herf: resources.html
+      href: resources.html
     - text: "Workshop"
       menu:
       - text: "Time Series Objects"
