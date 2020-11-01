@@ -10,7 +10,7 @@
 Materials for the Bay Area useR Group meetup
 halloween-time-series-workshop
 
-<img src="images/cover.png" width="70%" />
+<img src="images/cover.png" width="80%" />
 
   - Bay Area useR Group meetup
     [deatails](https://www.meetup.com/R-Users/events/273961620/)
