@@ -1,0 +1,230 @@
+---
+title: "Time Series Objects"
+author: 'Rami Krispin'
+date: "10/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE,
+                      message=FALSE, warning=FALSE)
+options(digits=6)
+```
+
+Time series data describes a sequence of observations that were captured over time. Each data point of the series is associated with a unique timestamp. Typically, the term time series (or series) refers to regular time series data, where:
+
+* **Irregular time series -** any time-series data that its observations are not equally spaced in time
+* **Regular time series -** defines as a sequence of observations that are equally spaced over time (e.g., a constant time interval). Examples of common regular time series data: 
+    * Quarterly GDP 
+    * Monthly unemployment
+    * Daily water consumption 
+    * Hourly temperatures
+    * Half hour demand for electricity 
+
+In this workshop, we will focus only on **regular** time series data.
+
+R provides a variety of time series classes and objects. The most common classes are:
+
+* `ts` - R built-in class for time-series objects.It is part of the **stats** package time series analysis and forecasting eco-system. The structure of this class is vector and matrix for `mts` objects (multiple time series)
+`xts`/`zoo` - flexible format for handling both regular and irregular time series data in a table format. Mainly used for finance applications
+ `tsibble` - a tidy data format for time series data, fairly similar to the xts/zoo packages
+ 
+In this workshop, we will focus on the `tsibble` class.
+
+### The ts class
+
+```{r}
+
+
+data("AirPassengers")
+
+class(AirPassengers)
+
+AirPassengers
+```
+
+```{r}
+start(AirPassengers)
+
+end(AirPassengers)
+
+time(AirPassengers)
+
+deltat(AirPassengers)
+
+frequency(AirPassengers)
+
+cycle(AirPassengers)
+```
+
+### The tsibble class
+
+The **tsibble** package provides a tidy data structure and tools for handling regular and irregular time series data. The `tsibble` class enables to store single and multiple time series objects in a `data.frame` / `tbl` format with time  awareness attributes.
+
+#### The tsibble attributes
+
+The `tsibble` class has a table structure with time awareness. Its main attributes are:
+
+* As the `tsibble` class is based on `tbl` / `data.frame` classes, it inherits their attributes and functionalities. Hence, `dplyr` or other utility tools that can be used with `tbl` and `data.frame` objects can be used with `tsibble` objects
+
+* `index` - a `tsibble` object has an `index` column that defines the timestamp or intervals of the series. The `index` could have the following date/time classes:
+
+| **Interval** | **Class**                 |
+|--------------|---------------------------|
+| Annual       | `integer`/`double`        |
+| Quarterly    | `yearquarter`             |
+| Monthly      | `yearmonth`               |
+| Weekly       | `yearweek`                |
+| Daily        | `Date`/`difftime`         |
+| Subdaily     | `POSIXt`/`difftime`/`hms` |
+
+
+**Table source:** the **tsibble** package [README](https://github.com/tidyverts/tsibble/blob/master/README.md) file
+
+* A `tsibble` object can represent a multiple time series object in a wide or long format:
+
+  * **Wide-format -**  each column represents a series, and every row share the same index
+  * **Long-format -** with the use of key column/s
+
+* `key` - optional, enables to represent multiple time series in a long format, by using single or multiple columns as series key/s
+
+
+#### Creating a tsibble object
+
+The `as_tsibble` function enables to convert data.frame or ts objects into a tsibble object. In the following example, we will load the [Natural Gas Consumption](https://fred.stlouisfed.org/series/NATURALGAS) series. This series represents the monthly consumption of natural gas in the US since January 2000:
+
+```{r}
+library(tsibble)
+library(dplyr)
+
+naturalgas_path <- paste(rprojroot::find_rstudio_root_file(), "data", "NATURALGAS.csv", sep = "/")
+
+us_gas <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) 
+
+head(us_gas)
+
+str(us_gas)
+
+```
+
+This series has two columns:
+
+* `date` - the timestamp of the observations
+* `y` - the series values
+
+We will reformat the `date` column from `character` into `Date` and use this column as the series `index`:
+
+```{r}
+us_gas$date <- as.Date(us_gas$date) %>% yearmonth()
+
+us_gas_tsibble <- us_gas %>% 
+  as_tsibble(index = "date")
+
+class(us_gas_tsibble)
+
+head(us_gas_tsibble)
+```
+As you can see, the `tsibble` class has `tbl` alike `print` method, with additional information about the series intervals, which is monthly. Let's explore the new object attributes:
+
+```{r}
+interval(us_gas_tsibble)
+
+index(us_gas_tsibble)
+
+key(us_gas_tsibble)
+```
+
+Since we did not define a `key`, the object does not have a key.
+
+
+#### Converting a ts object into a tsibble
+
+The `as_tsibble` function enables to convet `ts` object to `tsibble`. We will use the function to convert the `AirPassegers` from a `ts` object to a `tsibble` object:
+
+```{r }
+ap_tsibble <- AirPassengers %>% as_tsibble()
+
+class(ap_tsibble)
+
+head(ap_tsibble)
+
+interval(ap_tsibble)
+```
+
+The function convert the ts object time vector into an index object. 
+
+Note: as the time vector of the `ts` object can represent only two components of the timestamp (e.g., year and month, year and day, etc.), the transformation of the vector into a three or four components timestamp index (such as `Date` or other classes) might be ambiguous in some cases. 
+
+
+#### Multiple time series object
+
+The `tourism` dataset, from the **tsibble** package, is an example of multiple time series object in a long format. This series descibe the number of overnight trips per quarter across Australia by region, state and purpose: 
+
+```{r}
+library(tsibble)
+
+data("tourism")
+
+class(tourism)
+
+head(tourism)
+```
+
+Where in this case, the `Quarter` column defines the series `index` and the `Region`, `State`, and `Purpose` columns defines the series `key`:
+
+```{r}
+index(tourism)
+
+key(tourism)
+
+key_vars(tourism)
+
+key_data(tourism) %>% head()
+```
+
+This one of the cases the interaction between **dplyr** and **tsibble** is super useful:
+
+```{r}
+sydney <- tourism %>% filter(State == "New South Wales",
+                             Region == "Sydney",
+                             Purpose == "Holiday")
+
+head(sydney)
+
+key_data(sydney)
+```
+
+
+
+### Exercises
+
+Let's practice what we learned so far:
+
+* Load the Alcoholic Beverages Sales dataset from CSV file (`data` folder), reformat the timesampt to `yearmonth` and convert to `tsibble` object with the `as_tsibble` function
+
+```{r}
+us_abs_path <- paste(rprojroot::find_rstudio_root_file(), "data", "Alcoholic Beverages Sales.csv", sep = "/")
+
+us_abs <- read.csv(naturalgas_path, stringsAsFactors = FALSE) %>%
+  setNames(c("date", "y")) 
+
+head(us_abs)
+```
+
+
+
+* Load the California electricity production by provider dataset - `ca_elec.rda` file (also in `data` folder) and convert the `data.frame` object to `tsibble` object, where the `key` of the series should be the `operator` column
+
+```{r}
+ca_elec_path <- paste(rprojroot::find_rstudio_root_file(), "data", "ca_elec.rda", sep = "/")
+
+load(ca_elec_path)
+
+head(ca_elec)
+```
+
+
+
+
