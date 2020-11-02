@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Rami Krispin" />
+
+<meta name="date" content="2020-10-31" />
+
+<title>Seasonality Analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
+<script src="site_libs/plotly-binding-4.9.2.1/plotly.js"></script>
+<script src="site_libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="site_libs/crosstalk-1.1.0.1/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.1.0.1/js/crosstalk.min.js"></script>
+<link href="site_libs/plotly-htmlwidgets-css-1.52.2/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="site_libs/plotly-main-1.52.2/plotly-latest.min.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="fa fa-home fa-lg"></span>
+     
+    
+  </a>
+</li>
+<li>
+  <a href="resources.html">Resources</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Workshop
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="time_series_objects.html">Time Series Objects</a>
+    </li>
+    <li>
+      <a href="plotting_ts_objects.html">Plotting Time Series Objects</a>
+    </li>
+    <li>
+      <a href="ts-decomposition.html">Decomposition of Time Series</a>
+    </li>
+    <li>
+      <a href="seasonal_analysis.html">Seasonal Analysis</a>
+    </li>
+    <li>
+      <a href="correlation_analysis.html">Correlation Analysis</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Seasonality Analysis</h1>
+<h4 class="author">Rami Krispin</h4>
+<h4 class="date">10/31/2020</h4>
+
+</div>
+
+
+<p>Time series seasonal analysis is one of the core foundations of time series analysis. Generally, a time series could either have a seasonal component or not. In addition, a series could have more than one seasonal pattern, for example:</p>
+<ul>
+<li>Daily series could have both day of the year and day of the week seasonal patterns</li>
+<li>Hourly series could have both hourly, daily, monthly seasonal patterns</li>
+</ul>
+<p>In this section, we will focus on time series with a single seasonality pattern. In the following examples, we will use the US monthly consumption of natural gas.</p>
+<p>One of the main tools for exploring seasonality is data visualization. Another simplistic but useful is summary statistics tables.</p>
+<pre class="r"><code>library(tsibble)
+library(dplyr)
+library(lubridate)
+library(plotly)
+library(ggplot2)
+library(viridis)
+library(fabletools)
+library(feasts)</code></pre>
+<div id="data" class="section level4">
+<h4>Data</h4>
+<p>First, let’s load the series and reformat it into <code>tsibble</code> object:</p>
+<pre class="r"><code>naturalgas_path &lt;- paste(rprojroot::find_rstudio_root_file(), &quot;data&quot;, &quot;NATURALGAS.csv&quot;, sep = &quot;/&quot;)
+
+us_gas &lt;- read.csv(naturalgas_path, stringsAsFactors = FALSE) %&gt;%
+  setNames(c(&quot;date&quot;, &quot;y&quot;)) %&gt;%
+  mutate(date = yearmonth(as.Date(date))) %&gt;%
+  as_tsibble(index = &quot;date&quot;)
+
+
+head(us_gas)</code></pre>
+<pre><code>## # A tsibble: 6 x 2 [1M]
+##       date     y
+##      &lt;mth&gt; &lt;dbl&gt;
+## 1 2000 Jan 2510.
+## 2 2000 Feb 2331.
+## 3 2000 Mar 2051.
+## 4 2000 Apr 1783.
+## 5 2000 May 1633.
+## 6 2000 Jun 1513.</code></pre>
+<p>Just by eyeballing the series plot, you can identify the strong seasonal pattern:</p>
+<pre class="r"><code>us_gas %&gt;% plot_ly(x = ~ as.Date(date),
+                   y = ~ y,
+                   type = &quot;scatter&quot;,
+                   mode = &quot;line&quot;,
+                   name = &quot;US Natural Gas&quot;) %&gt;%
+  layout(title = &quot;US Natural Gas Consumption (Not Seasonally Adjusted)&quot;,
+         yaxis = list(title = &quot;Billion Cubic Feet&quot;),
+         xaxis = list(title = paste(&quot;Source: U.S. Bureau of Transportation Statistics,&quot;, &quot;&lt;br&gt;&quot; ,
+                                    &quot;Natural Gas Consumption [NATURALGAS]&quot;, sep = &quot;&quot;)),
+         hovermode = &quot;compare&quot;)</code></pre>
+<div id="htmlwidget-9a491245db0178d3a72c" style="width:768px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-9a491245db0178d3a72c">{"x":{"visdat":{"6aa727d2717a":["function () ","plotlyVisDat"]},"cur_data":"6aa727d2717a","attrs":{"6aa727d2717a":{"x":{},"y":{},"mode":"line","name":"US Natural Gas","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":"US Natural Gas Consumption (Not Seasonally Adjusted)","yaxis":{"domain":[0,1],"automargin":true,"title":"Billion Cubic Feet"},"xaxis":{"domain":[0,1],"automargin":true,"title":"Source: U.S. Bureau of Transportation Statistics,<br>Natural Gas Consumption [NATURALGAS]"},"hovermode":"compare","showlegend":false},"source":"A","config":{"showSendToCloud":false},"data":[{"x":["2000-01-01","2000-02-01","2000-03-01","2000-04-01","2000-05-01","2000-06-01","2000-07-01","2000-08-01","2000-09-01","2000-10-01","2000-11-01","2000-12-01","2001-01-01","2001-02-01","2001-03-01","2001-04-01","2001-05-01","2001-06-01","2001-07-01","2001-08-01","2001-09-01","2001-10-01","2001-11-01","2001-12-01","2002-01-01","2002-02-01","2002-03-01","2002-04-01","2002-05-01","2002-06-01","2002-07-01","2002-08-01","2002-09-01","2002-10-01","2002-11-01","2002-12-01","2003-01-01","2003-02-01","2003-03-01","2003-04-01","2003-05-01","2003-06-01","2003-07-01","2003-08-01","2003-09-01","2003-10-01","2003-11-01","2003-12-01","2004-01-01","2004-02-01","2004-03-01","2004-04-01","2004-05-01","2004-06-01","2004-07-01","2004-08-01","2004-09-01","2004-10-01","2004-11-01","2004-12-01","2005-01-01","2005-02-01","2005-03-01","2005-04-01","2005-05-01","2005-06-01","2005-07-01","2005-08-01","2005-09-01","2005-10-01","2005-11-01","2005-12-01","2006-01-01","2006-02-01","2006-03-01","2006-04-01","2006-05-01","2006-06-01","2006-07-01","2006-08-01","2006-09-01","2006-10-01","2006-11-01","2006-12-01","2007-01-01","2007-02-01","2007-03-01","2007-04-01","2007-05-01","2007-06-01","2007-07-01","2007-08-01","2007-09-01","2007-10-01","2007-11-01","2007-12-01","2008-01-01","2008-02-01","2008-03-01","2008-04-01","2008-05-01","2008-06-01","2008-07-01","2008-08-01","2008-09-01","2008-10-01","2008-11-01","2008-12-01","2009-01-01","2009-02-01","2009-03-01","2009-04-01","2009-05-01","2009-06-01","2009-07-01","2009-08-01","2009-09-01","2009-10-01","2009-11-01","2009-12-01","2010-01-01","2010-02-01","2010-03-01","2010-04-01","2010-05-01","2010-06-01","2010-07-01","2010-08-01","2010-09-01","2010-10-01","2010-11-01","2010-12-01","2011-01-01","2011-02-01","2011-03-01","2011-04-01","2011-05-01","2011-06-01","2011-07-01","2011-08-01","2011-09-01","2011-10-01","2011-11-01","2011-12-01","2012-01-01","2012-02-01","2012-03-01","2012-04-01","2012-05-01","2012-06-01","2012-07-01","2012-08-01","2012-09-01","2012-10-01","2012-11-01","2012-12-01","2013-01-01","2013-02-01","2013-03-01","2013-04-01","2013-05-01","2013-06-01","2013-07-01","2013-08-01","2013-09-01","2013-10-01","2013-11-01","2013-12-01","2014-01-01","2014-02-01","2014-03-01","2014-04-01","2014-05-01","2014-06-01","2014-07-01","2014-08-01","2014-09-01","2014-10-01","2014-11-01","2014-12-01","2015-01-01","2015-02-01","2015-03-01","2015-04-01","2015-05-01","2015-06-01","2015-07-01","2015-08-01","2015-09-01","2015-10-01","2015-11-01","2015-12-01","2016-01-01","2016-02-01","2016-03-01","2016-04-01","2016-05-01","2016-06-01","2016-07-01","2016-08-01","2016-09-01","2016-10-01","2016-11-01","2016-12-01","2017-01-01","2017-02-01","2017-03-01","2017-04-01","2017-05-01","2017-06-01","2017-07-01","2017-08-01","2017-09-01","2017-10-01","2017-11-01","2017-12-01","2018-01-01","2018-02-01","2018-03-01","2018-04-01","2018-05-01","2018-06-01","2018-07-01","2018-08-01","2018-09-01","2018-10-01","2018-11-01","2018-12-01","2019-01-01","2019-02-01","2019-03-01","2019-04-01","2019-05-01","2019-06-01","2019-07-01","2019-08-01","2019-09-01","2019-10-01","2019-11-01","2019-12-01","2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01"],"y":[2510.5,2330.7,2050.6,1783.3,1632.9,1513.1,1525.6,1653.1,1475,1567.8,1908.5,2587.5,2677,2309.5,2246.6,1807.2,1522.4,1444.4,1598.1,1669.2,1494.1,1649.1,1701,2120.2,2487.6,2242.4,2258.4,1881,1611.5,1591.4,1748.4,1725.7,1542.2,1645.9,1913.6,2378.9,2700.5,2500.3,2197.9,1743.5,1514.7,1368.4,1600.5,1651.6,1428.6,1553.2,1753.6,2263.7,2675.8,2511.1,2100.9,1745.2,1573,1483.7,1584.9,1578,1482.2,1557.2,1782.8,2327.7,2561.9,2243,2205.8,1724.9,1522.6,1534.1,1686.6,1695.1,1422.5,1428.2,1663.4,2326.4,2165.3,2144.4,2126.4,1681,1526.3,1550.9,1758.7,1751.7,1462.1,1644.2,1765.4,2122.8,2475.6,2567,2128.8,1810.1,1559.1,1555.2,1659.9,1896.1,1590.5,1627.8,1834.5,2399.2,2734,2503.4,2278.2,1823.9,1576.4,1604.2,1708.6,1682.9,1460.9,1635.8,1868.9,2399.7,2729.7,2332.5,2170.7,1741.3,1504,1527.8,1658,1736.5,1575,1666.5,1776.2,2491.9,2809.8,2481,2142.9,1691.8,1617.3,1649.5,1825.8,1878.9,1637.5,1664.9,1973.3,2714.1,2888.6,2452.4,2230.5,1825,1667.4,1657.3,1890.5,1891.8,1655.6,1744.5,2031.9,2541.9,2756.2,2500.7,2127.8,1953.1,1873.8,1868.4,2069.8,2008.8,1807.2,1901.1,2167.8,2503.9,2878.8,2567.2,2521.1,1967.5,1752.5,1742.9,1926.3,1927.4,1767,1866.8,2316.9,2920.8,3204.1,2741.2,2557.9,1961.7,1810.2,1745.4,1881,1933.1,1809.3,1912.8,2357.5,2679.2,3115,2925.2,2591.3,2007.9,1858.1,1899.9,2067.7,2052.7,1901.3,1987.3,2249.1,2588.2,3091.7,2652.3,2356.3,2083.8,1965.8,2000.7,2186.6,2208.4,1947.8,1925.2,2159.4,2866.3,2913.8,2340.2,2523.3,1932,1892,1910.4,2141.6,2093.8,1920.5,2031.5,2357.3,3086,3340.9,2710.7,2796.7,2350.5,2055,2063.1,2350.7,2313.8,2156.1,2285.9,2715.9,2999.5,3409.3,3010.3,2906.9,2205,2126.1,2119.4,2409.5,2440.7,2217.3,2328,2778.6,3148.1,3293.2,3035.9,2709.2,2243.9,2068.4,2135.6,2494.7,2350.9],"mode":"line","name":"US Natural Gas","type":"scatter","marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"line":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="decomposing-the-series" class="section level4">
+<h4>Decomposing the Series</h4>
+<p>We can leverage the <code>classical_decomposition</code> function to decompose the series to the trend, seasonal and irregular components:</p>
+<pre class="r"><code>us_gas %&gt;% 
+  model(classical_decomposition(y)) %&gt;%
+  components() %&gt;% 
+  autoplot()</code></pre>
+<p><img src="seasonal_analysis_files/figure-html/unnamed-chunk-4-1.png" width="768" /></p>
+</div>
+<div id="summary-statistics" class="section level4">
+<h4>Summary Statistics</h4>
+<p>We will start with the summary statistics tables by calculating:</p>
+<ul>
+<li>Yearly average</li>
+<li>Monthly average</li>
+</ul>
+<p>We will create time features with the <code>year</code> and <code>month</code> functions from the <strong>lubridate</strong> package that enables us to group by those features:</p>
+<pre class="r"><code>us_gas &lt;- us_gas %&gt;%
+  mutate(year = year(date),
+         month = month(date, label = TRUE))
+
+head(us_gas)</code></pre>
+<pre><code>## # A tsibble: 6 x 4 [1M]
+##       date     y  year month
+##      &lt;mth&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;ord&gt;
+## 1 2000 Jan 2510.  2000 Jan  
+## 2 2000 Feb 2331.  2000 Feb  
+## 3 2000 Mar 2051.  2000 Mar  
+## 4 2000 Apr 1783.  2000 Apr  
+## 5 2000 May 1633.  2000 May  
+## 6 2000 Jun 1513.  2000 Jun</code></pre>
+<p>The year average could provide us insights about change in the trend direction. This information can also be observed from the decompose function:</p>
+<pre class="r"><code>us_gas %&gt;% 
+  as.data.frame() %&gt;%
+  group_by(year) %&gt;%
+  summarise(avg = mean(y)) %&gt;%
+  plot_ly(x = ~ year,
+          y = ~ avg,
+          type = &quot;scatter&quot;,
+          mode = &quot;line&quot;)</code></pre>
+<div id="htmlwidget-af96593b09ae1a20011c" style="width:768px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-af96593b09ae1a20011c">{"x":{"visdat":{"6aa7575e04cc":["function () ","plotlyVisDat"]},"cur_data":"6aa7575e04cc","attrs":{"6aa7575e04cc":{"x":{},"y":{},"mode":"line","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"year"},"yaxis":{"domain":[0,1],"automargin":true,"title":"avg"},"hovermode":"closest","showlegend":false},"source":"A","config":{"showSendToCloud":false},"data":[{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1878.21666666667,1853.23333333333,1918.91666666667,1856.375,1866.875,1834.54166666667,1808.26666666667,1925.31666666667,1939.74166666667,1909.175,2007.23333333333,2039.78333333333,2128.21666666667,2179.6,2216.11666666667,2270.30833333333,2287.025,2261.86666666667,2511.56666666667,2591.6,2541.475],"mode":"line","type":"scatter","marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"line":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>If a series has a strong trend it may shadow some of the series seasonality. In this case, you can either use short part of the series or detrend the series.</p>
+<p>The next summary is by the main frequency units - the month of the year:</p>
+<pre class="r"><code>us_gas %&gt;% 
+  as.data.frame() %&gt;%
+  group_by(month) %&gt;%
+  summarise(avg = mean(y))</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##    month   avg
+##    &lt;ord&gt; &lt;dbl&gt;
+##  1 Jan   2829.
+##  2 Feb   2529.
+##  3 Mar   2344.
+##  4 Apr   1903.
+##  5 May   1725.
+##  6 Jun   1713.
+##  7 Jul   1894.
+##  8 Aug   1911.
+##  9 Sep   1688.
+## 10 Oct   1781.
+## 11 Nov   2054.
+## 12 Dec   2573.</code></pre>
+</div>
+<div id="box-plot-plots" class="section level4">
+<h4>Box-plot plots</h4>
+<p>A box plot is a useful method to visualize the distribution of the series observations by its frequency units:</p>
+<pre class="r"><code>us_gas %&gt;% 
+  plot_ly(x = ~month, y = ~ y, 
+          type = &quot;box&quot;, 
+          color = ~month, 
+          colors = &quot;Dark2&quot;,
+          boxpoints = &quot;all&quot;, 
+          jitter = 0.3,
+          pointpos = -1.8)</code></pre>
+<div id="htmlwidget-3bbf389f6097e99388a2" style="width:768px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3bbf389f6097e99388a2">{"x":{"visdat":{"6aa769c302ea":["function () ","plotlyVisDat"]},"cur_data":"6aa769c302ea","attrs":{"6aa769c302ea":{"x":{},"y":{},"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"color":{},"colors":"Dark2","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"box"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"month","type":"category","categoryorder":"array","categoryarray":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]},"yaxis":{"domain":[0,1],"automargin":true,"title":"y"},"hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false},"data":[{"fillcolor":"rgba(102,102,102,0.5)","x":["Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec"],"y":[2587.5,2120.2,2378.9,2263.7,2327.7,2326.4,2122.8,2399.2,2399.7,2491.9,2714.1,2541.9,2503.9,2920.8,2679.2,2588.2,2866.3,3086,2999.5,3148.1],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Dec","marker":{"color":"rgba(102,102,102,1)","line":{"color":"rgba(102,102,102,1)"}},"line":{"color":"rgba(102,102,102,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(146,112,61,0.5)","x":["Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov"],"y":[1908.5,1701,1913.6,1753.6,1782.8,1663.4,1765.4,1834.5,1868.9,1776.2,1973.3,2031.9,2167.8,2316.9,2357.5,2249.1,2159.4,2357.3,2715.9,2778.6],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Nov","marker":{"color":"rgba(146,112,61,1)","line":{"color":"rgba(146,112,61,1)"}},"line":{"color":"rgba(146,112,61,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(183,132,26,0.5)","x":["Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct"],"y":[1567.8,1649.1,1645.9,1553.2,1557.2,1428.2,1644.2,1627.8,1635.8,1666.5,1664.9,1744.5,1901.1,1866.8,1912.8,1987.3,1925.2,2031.5,2285.9,2328],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Oct","marker":{"color":"rgba(183,132,26,1)","line":{"color":"rgba(183,132,26,1)"}},"line":{"color":"rgba(183,132,26,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(224,166,7,0.5)","x":["Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep"],"y":[1475,1494.1,1542.2,1428.6,1482.2,1422.5,1462.1,1590.5,1460.9,1575,1637.5,1655.6,1807.2,1767,1809.3,1901.3,1947.8,1920.5,2156.1,2217.3],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Sep","marker":{"color":"rgba(224,166,7,1)","line":{"color":"rgba(224,166,7,1)"}},"line":{"color":"rgba(224,166,7,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(165,170,21,0.5)","x":["Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug"],"y":[1653.1,1669.2,1725.7,1651.6,1578,1695.1,1751.7,1896.1,1682.9,1736.5,1878.9,1891.8,2008.8,1927.4,1933.1,2052.7,2208.4,2093.8,2313.8,2440.7,2350.9],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Aug","marker":{"color":"rgba(165,170,21,1)","line":{"color":"rgba(165,170,21,1)"}},"line":{"color":"rgba(165,170,21,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(135,153,58,0.5)","x":["Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul"],"y":[1525.6,1598.1,1748.4,1600.5,1584.9,1686.6,1758.7,1659.9,1708.6,1658,1825.8,1890.5,2069.8,1926.3,1881,2067.7,2186.6,2141.6,2350.7,2409.5,2494.7],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Jul","marker":{"color":"rgba(135,153,58,1)","line":{"color":"rgba(135,153,58,1)"}},"line":{"color":"rgba(135,153,58,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(213,84,122,0.5)","x":["Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun"],"y":[1513.1,1444.4,1591.4,1368.4,1483.7,1534.1,1550.9,1555.2,1604.2,1527.8,1649.5,1657.3,1868.4,1742.9,1745.4,1899.9,2000.7,1910.4,2063.1,2119.4,2135.6],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Jun","marker":{"color":"rgba(213,84,122,1)","line":{"color":"rgba(213,84,122,1)"}},"line":{"color":"rgba(213,84,122,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(187,86,156,0.5)","x":["May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May"],"y":[1632.9,1522.4,1611.5,1514.7,1573,1522.6,1526.3,1559.1,1576.4,1504,1617.3,1667.4,1873.8,1752.5,1810.2,1858.1,1965.8,1892,2055,2126.1,2068.4],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"May","marker":{"color":"rgba(187,86,156,1)","line":{"color":"rgba(187,86,156,1)"}},"line":{"color":"rgba(187,86,156,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(134,110,165,0.5)","x":["Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr"],"y":[1783.3,1807.2,1881,1743.5,1745.2,1724.9,1681,1810.1,1823.9,1741.3,1691.8,1825,1953.1,1967.5,1961.7,2007.9,2083.8,1932,2350.5,2205,2243.9],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Apr","marker":{"color":"rgba(134,110,165,1)","line":{"color":"rgba(134,110,165,1)"}},"line":{"color":"rgba(134,110,165,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(200,100,67,0.5)","x":["Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar"],"y":[2050.6,2246.6,2258.4,2197.9,2100.9,2205.8,2126.4,2128.8,2278.2,2170.7,2142.9,2230.5,2127.8,2521.1,2557.9,2591.3,2356.3,2523.3,2796.7,2906.9,2709.2],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Mar","marker":{"color":"rgba(200,100,67,1)","line":{"color":"rgba(200,100,67,1)"}},"line":{"color":"rgba(200,100,67,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(175,125,55,0.5)","x":["Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb"],"y":[2330.7,2309.5,2242.4,2500.3,2511.1,2243,2144.4,2567,2503.4,2332.5,2481,2452.4,2500.7,2567.2,2741.2,2925.2,2652.3,2340.2,2710.7,3010.3,3035.9],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Feb","marker":{"color":"rgba(175,125,55,1)","line":{"color":"rgba(175,125,55,1)"}},"line":{"color":"rgba(175,125,55,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(27,158,119,0.5)","x":["Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan"],"y":[2510.5,2677,2487.6,2700.5,2675.8,2561.9,2165.3,2475.6,2734,2729.7,2809.8,2888.6,2756.2,2878.8,3204.1,3115,3091.7,2913.8,3340.9,3409.3,3293.2],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Jan","marker":{"color":"rgba(27,158,119,1)","line":{"color":"rgba(27,158,119,1)"}},"line":{"color":"rgba(27,158,119,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>While we can see a clear seasonal pattern, the distribution of each month is fairly wide. This is mainly due to the year over year growth (or the series trend). We can reduce the growth impact by detrending the series and replot the seasonal box-plot. We will use the <code>classical_decomposition</code> and <code>model</code> functions from the <strong>feasts</strong> and <strong>fabletools</strong> packages, respectively:</p>
+<pre class="r"><code>us_gas_comp &lt;- us_gas %&gt;% 
+  model(classical_decomposition(y)) %&gt;%
+  components() 
+
+us_gas &lt;- us_gas %&gt;% 
+  left_join(us_gas_comp %&gt;% select(date, trend)) %&gt;%
+  mutate(detrend = y - trend)</code></pre>
+<p>Let’s replot the series monthly distribution, this time using the detrended series:</p>
+<pre class="r"><code>us_gas %&gt;% 
+  plot_ly(x = ~month, y = ~ detrend, 
+          type = &quot;box&quot;, 
+          color = ~month, 
+          colors = &quot;Dark2&quot;,
+          boxpoints = &quot;all&quot;, 
+          jitter = 0.3,
+          pointpos = -1.8)</code></pre>
+<div id="htmlwidget-fa4e7f7f19b0eed143d4" style="width:768px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-fa4e7f7f19b0eed143d4">{"x":{"visdat":{"6aa75172b629":["function () ","plotlyVisDat"]},"cur_data":"6aa75172b629","attrs":{"6aa75172b629":{"x":{},"y":{},"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"color":{},"colors":"Dark2","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"box"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"month","type":"category","categoryorder":"array","categoryarray":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]},"yaxis":{"domain":[0,1],"automargin":true,"title":"detrend"},"hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false},"data":[{"fillcolor":"rgba(102,102,102,0.5)","x":["Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec","Dec"],"y":[690.920833333333,267.658333333334,454.608333333333,406.7625,487.708333333333,542.391666666667,239.5875,440.566666666666,499.616666666666,555.604166666667,679.783333333333,481.0125,341.2875,692.095833333333,438.1125,342.658333333333,628.754166666667,680.0625,451.9375,581.408333333334],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Dec","marker":{"color":"rgba(102,102,102,1)","line":{"color":"rgba(102,102,102,1)"}},"line":{"color":"rgba(102,102,102,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(146,112,61,0.5)","x":["Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov","Nov"],"y":[4.45416666666688,-141.704166666666,-24.0166666666667,-96.1041666666667,-57.1916666666666,-119.754166666666,-116.266666666666,-121.370833333334,-37.3833333333332,-150.304166666667,-58.6041666666667,-11.5916666666667,-5.09583333333285,90.7041666666664,124.845833333333,12.2458333333334,-84.9833333333331,-35.4833333333331,173.645833333333,210.179166666666],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Nov","marker":{"color":"rgba(146,112,61,1)","line":{"color":"rgba(146,112,61,1)"}},"line":{"color":"rgba(146,112,61,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(183,132,26,0.5)","x":["Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct","Oct"],"y":[-339.854166666667,-186.816666666666,-301.479166666667,-294.004166666666,-285.7375,-356.629166666667,-230.720833333333,-326.775,-276.941666666667,-257.345833333333,-359.366666666666,-285.054166666667,-276.25,-357.233333333333,-315.933333333334,-241.904166666666,-328.583333333333,-337.054166666666,-259.454166666667,-241.204166666667],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Oct","marker":{"color":"rgba(183,132,26,1)","line":{"color":"rgba(183,132,26,1)"}},"line":{"color":"rgba(183,132,26,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(224,166,7,0.5)","x":["Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep","Sep"],"y":[-423.491666666666,-338.25,-413.429166666667,-422.575,-357.2125,-367.466666666667,-407.341666666666,-357.275,-459.7625,-352.066666666667,-377.566666666666,-372.895833333333,-353.1625,-455.741666666666,-416.116666666667,-334.533333333333,-305.35,-419.225,-390.725,-358.520833333333],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Sep","marker":{"color":"rgba(224,166,7,1)","line":{"color":"rgba(224,166,7,1)"}},"line":{"color":"rgba(224,166,7,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(165,170,21,0.5)","x":["Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug","Aug"],"y":[-238.108333333333,-165.454166666667,-221.704166666667,-203.166666666667,-268.2125,-102.283333333334,-100.033333333333,-48.0999999999999,-249.3625,-185.5375,-133.708333333333,-138.9625,-132.404166666666,-286.558333333333,-283.258333333333,-204.295833333334,-50.7958333333331,-219.095833333333,-215.95,-142.291666666667],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Aug","marker":{"color":"rgba(165,170,21,1)","line":{"color":"rgba(165,170,21,1)"}},"line":{"color":"rgba(165,170,21,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(135,153,58,0.5)","x":["Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul","Jul"],"y":[-359.554166666667,-247.241666666667,-179.3875,-254.845833333333,-277.229166666667,-131.416666666667,-62.4958333333334,-276.183333333333,-230.9625,-254.5125,-184.716666666667,-143.766666666667,-63.5249999999992,-266.854166666667,-331.404166666666,-201.6375,-93.0124999999998,-138.0625,-163.716666666666,-177.2625],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Jul","marker":{"color":"rgba(135,153,58,1)","line":{"color":"rgba(135,153,58,1)"}},"line":{"color":"rgba(135,153,58,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(213,84,122,0.5)","x":["Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun","Jun"],"y":[-428.304166666666,-316.7375,-492.775,-380.508333333333,-300.495833333333,-265.85,-358.6,-335.520833333333,-377.533333333333,-348.475,-389.658333333334,-261.4,-419.329166666667,-480.783333333333,-374.2,-274.7375,-342.3125,-452.070833333334,-466.008333333333],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Jun","marker":{"color":"rgba(213,84,122,1)","line":{"color":"rgba(213,84,122,1)"}},"line":{"color":"rgba(213,84,122,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(187,86,156,0.5)","x":["May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May","May"],"y":[-378.420833333333,-277,-357.941666666667,-287.325,-317.025,-294.683333333334,-340.304166666667,-361.866666666667,-401.354166666667,-363.204166666667,-384.291666666667,-251.920833333333,-386.145833333333,-424.358333333333,-424.308333333333,-301.7875,-343.3125,-448.833333333333,-450.504166666667],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"May","marker":{"color":"rgba(187,86,156,1)","line":{"color":"rgba(187,86,156,1)"}},"line":{"color":"rgba(187,86,156,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(134,110,165,0.5)","x":["Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr","Apr"],"y":[-98.8791666666666,1.22500000000014,-139.670833333333,-113.741666666667,-125.075,-126.733333333333,-87.1083333333336,-112.6,-166.6375,-280.558333333333,-220.933333333333,-160.433333333333,-166.3625,-269.25,-275.920833333333,-190.1125,-290.6375,-127.791666666667,-367.2375],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Apr","marker":{"color":"rgba(134,110,165,1)","line":{"color":"rgba(134,110,165,1)"}},"line":{"color":"rgba(134,110,165,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(200,100,67,0.5)","x":["Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar","Mar"],"y":[344.704166666667,380.495833333333,306.133333333334,244.358333333334,347.9625,329.316666666667,236.258333333334,336.633333333333,268.795833333333,173.079166666667,188.6375,27.1083333333336,384.133333333333,330.629166666667,314.416666666667,81.7375000000002,303.954166666667,338.825,338.966666666667],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Mar","marker":{"color":"rgba(200,100,67,1)","line":{"color":"rgba(200,100,67,1)"}},"line":{"color":"rgba(200,100,67,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(175,125,55,0.5)","x":["Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb","Feb"],"y":[409.070833333333,368.854166666667,600.7125,653.725,387.554166666667,351.325,685.825,547.55,437.583333333333,519.716666666667,411.829166666667,411.2,425.166666666667,515.929166666667,657.133333333334,386.1625,114.941666666666,271.808333333333,450.204166666667,465.175],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Feb","marker":{"color":"rgba(175,125,55,1)","line":{"color":"rgba(175,125,55,1)"}},"line":{"color":"rgba(175,125,55,1)"},"xaxis":"x","yaxis":"y","frame":null},{"fillcolor":"rgba(27,158,119,0.5)","x":["Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan","Jan"],"y":[780.2625,622.670833333333,791.6625,814.708333333333,715.570833333334,377.5875,596.325,771.295833333333,834.908333333333,861.441666666667,851.2625,679.045833333333,727.395833333333,977.179166666667,859.695833333334,837.004166666667,681.891666666667,919.887500000001,856.941666666667,722.283333333332],"boxpoints":"all","jitter":0.3,"pointpos":-1.8,"type":"box","name":"Jan","marker":{"color":"rgba(27,158,119,1)","line":{"color":"rgba(27,158,119,1)"}},"line":{"color":"rgba(27,158,119,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>After reducing the trend impact, the monthly distribution, as expected, is narrowing down, and we can see a clear seasonal pattern.</p>
+</div>
+<div id="seasonal-plot" class="section level4">
+<h4>Seasonal Plot</h4>
+<p>The seasonal plot splits the series by its seasonal cycle (year) and compares changes in each cycle (or from year to year). In the following example, we will create a seasonal plot with plotly:</p>
+<pre class="r"><code>p &lt;- plot_ly() 
+
+years &lt;- unique(us_gas$year)
+
+colors &lt;- viridis::viridis(n = length(years))
+
+for(i in seq_along(years)){
+  y &lt;- NULL
+  
+  y &lt;- us_gas %&gt;% 
+    as.data.frame() %&gt;%
+    filter(year == years[i])
+  
+  p &lt;- p %&gt;% add_lines(x = y$month,
+                       y = y$y,
+                       line = list(color = colors[i]),
+                       name = years[i])
+  
+}
+
+p</code></pre>
+<div id="htmlwidget-0b7ef15406683d951ef3" style="width:768px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0b7ef15406683d951ef3">{"x":{"visdat":{"6aa7b3f6ea8":["function () ","plotlyVisDat"]},"cur_data":"6aa7b3f6ea8","attrs":{"6aa7b3f6ea8":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2510.5,2330.7,2050.6,1783.3,1632.9,1513.1,1525.6,1653.1,1475,1567.8,1908.5,2587.5],"type":"scatter","mode":"lines","line":{"color":"#440154FF"},"name":2000,"inherit":true},"6aa7b3f6ea8.1":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2677,2309.5,2246.6,1807.2,1522.4,1444.4,1598.1,1669.2,1494.1,1649.1,1701,2120.2],"type":"scatter","mode":"lines","line":{"color":"#481467FF"},"name":2001,"inherit":true},"6aa7b3f6ea8.2":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2487.6,2242.4,2258.4,1881,1611.5,1591.4,1748.4,1725.7,1542.2,1645.9,1913.6,2378.9],"type":"scatter","mode":"lines","line":{"color":"#482576FF"},"name":2002,"inherit":true},"6aa7b3f6ea8.3":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2700.5,2500.3,2197.9,1743.5,1514.7,1368.4,1600.5,1651.6,1428.6,1553.2,1753.6,2263.7],"type":"scatter","mode":"lines","line":{"color":"#463480FF"},"name":2003,"inherit":true},"6aa7b3f6ea8.4":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2675.8,2511.1,2100.9,1745.2,1573,1483.7,1584.9,1578,1482.2,1557.2,1782.8,2327.7],"type":"scatter","mode":"lines","line":{"color":"#414487FF"},"name":2004,"inherit":true},"6aa7b3f6ea8.5":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2561.9,2243,2205.8,1724.9,1522.6,1534.1,1686.6,1695.1,1422.5,1428.2,1663.4,2326.4],"type":"scatter","mode":"lines","line":{"color":"#3B528BFF"},"name":2005,"inherit":true},"6aa7b3f6ea8.6":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2165.3,2144.4,2126.4,1681,1526.3,1550.9,1758.7,1751.7,1462.1,1644.2,1765.4,2122.8],"type":"scatter","mode":"lines","line":{"color":"#35608DFF"},"name":2006,"inherit":true},"6aa7b3f6ea8.7":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2475.6,2567,2128.8,1810.1,1559.1,1555.2,1659.9,1896.1,1590.5,1627.8,1834.5,2399.2],"type":"scatter","mode":"lines","line":{"color":"#2F6C8EFF"},"name":2007,"inherit":true},"6aa7b3f6ea8.8":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2734,2503.4,2278.2,1823.9,1576.4,1604.2,1708.6,1682.9,1460.9,1635.8,1868.9,2399.7],"type":"scatter","mode":"lines","line":{"color":"#2A788EFF"},"name":2008,"inherit":true},"6aa7b3f6ea8.9":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2729.7,2332.5,2170.7,1741.3,1504,1527.8,1658,1736.5,1575,1666.5,1776.2,2491.9],"type":"scatter","mode":"lines","line":{"color":"#25848EFF"},"name":2009,"inherit":true},"6aa7b3f6ea8.10":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2809.8,2481,2142.9,1691.8,1617.3,1649.5,1825.8,1878.9,1637.5,1664.9,1973.3,2714.1],"type":"scatter","mode":"lines","line":{"color":"#21908CFF"},"name":2010,"inherit":true},"6aa7b3f6ea8.11":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2888.6,2452.4,2230.5,1825,1667.4,1657.3,1890.5,1891.8,1655.6,1744.5,2031.9,2541.9],"type":"scatter","mode":"lines","line":{"color":"#1E9C89FF"},"name":2011,"inherit":true},"6aa7b3f6ea8.12":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2756.2,2500.7,2127.8,1953.1,1873.8,1868.4,2069.8,2008.8,1807.2,1901.1,2167.8,2503.9],"type":"scatter","mode":"lines","line":{"color":"#22A884FF"},"name":2012,"inherit":true},"6aa7b3f6ea8.13":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2878.8,2567.2,2521.1,1967.5,1752.5,1742.9,1926.3,1927.4,1767,1866.8,2316.9,2920.8],"type":"scatter","mode":"lines","line":{"color":"#2FB47CFF"},"name":2013,"inherit":true},"6aa7b3f6ea8.14":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3204.1,2741.2,2557.9,1961.7,1810.2,1745.4,1881,1933.1,1809.3,1912.8,2357.5,2679.2],"type":"scatter","mode":"lines","line":{"color":"#43BF71FF"},"name":2014,"inherit":true},"6aa7b3f6ea8.15":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3115,2925.2,2591.3,2007.9,1858.1,1899.9,2067.7,2052.7,1901.3,1987.3,2249.1,2588.2],"type":"scatter","mode":"lines","line":{"color":"#5DC863FF"},"name":2015,"inherit":true},"6aa7b3f6ea8.16":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3091.7,2652.3,2356.3,2083.8,1965.8,2000.7,2186.6,2208.4,1947.8,1925.2,2159.4,2866.3],"type":"scatter","mode":"lines","line":{"color":"#7AD151FF"},"name":2016,"inherit":true},"6aa7b3f6ea8.17":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2913.8,2340.2,2523.3,1932,1892,1910.4,2141.6,2093.8,1920.5,2031.5,2357.3,3086],"type":"scatter","mode":"lines","line":{"color":"#9AD93CFF"},"name":2017,"inherit":true},"6aa7b3f6ea8.18":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3340.9,2710.7,2796.7,2350.5,2055,2063.1,2350.7,2313.8,2156.1,2285.9,2715.9,2999.5],"type":"scatter","mode":"lines","line":{"color":"#BBDF27FF"},"name":2018,"inherit":true},"6aa7b3f6ea8.19":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3409.3,3010.3,2906.9,2205,2126.1,2119.4,2409.5,2440.7,2217.3,2328,2778.6,3148.1],"type":"scatter","mode":"lines","line":{"color":"#DEE318FF"},"name":2019,"inherit":true},"6aa7b3f6ea8.20":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],"y":[3293.2,3035.9,2709.2,2243.9,2068.4,2135.6,2494.7,2350.9],"type":"scatter","mode":"lines","line":{"color":"#FDE725FF"},"name":2020,"inherit":true}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":[],"type":"category","categoryorder":"array","categoryarray":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]},"yaxis":{"domain":[0,1],"automargin":true,"title":[]},"hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false},"data":[{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2510.5,2330.7,2050.6,1783.3,1632.9,1513.1,1525.6,1653.1,1475,1567.8,1908.5,2587.5],"type":"scatter","mode":"lines","line":{"color":"#440154FF"},"name":2000,"marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2677,2309.5,2246.6,1807.2,1522.4,1444.4,1598.1,1669.2,1494.1,1649.1,1701,2120.2],"type":"scatter","mode":"lines","line":{"color":"#481467FF"},"name":2001,"marker":{"color":"rgba(255,127,14,1)","line":{"color":"rgba(255,127,14,1)"}},"error_y":{"color":"rgba(255,127,14,1)"},"error_x":{"color":"rgba(255,127,14,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2487.6,2242.4,2258.4,1881,1611.5,1591.4,1748.4,1725.7,1542.2,1645.9,1913.6,2378.9],"type":"scatter","mode":"lines","line":{"color":"#482576FF"},"name":2002,"marker":{"color":"rgba(44,160,44,1)","line":{"color":"rgba(44,160,44,1)"}},"error_y":{"color":"rgba(44,160,44,1)"},"error_x":{"color":"rgba(44,160,44,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2700.5,2500.3,2197.9,1743.5,1514.7,1368.4,1600.5,1651.6,1428.6,1553.2,1753.6,2263.7],"type":"scatter","mode":"lines","line":{"color":"#463480FF"},"name":2003,"marker":{"color":"rgba(214,39,40,1)","line":{"color":"rgba(214,39,40,1)"}},"error_y":{"color":"rgba(214,39,40,1)"},"error_x":{"color":"rgba(214,39,40,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2675.8,2511.1,2100.9,1745.2,1573,1483.7,1584.9,1578,1482.2,1557.2,1782.8,2327.7],"type":"scatter","mode":"lines","line":{"color":"#414487FF"},"name":2004,"marker":{"color":"rgba(148,103,189,1)","line":{"color":"rgba(148,103,189,1)"}},"error_y":{"color":"rgba(148,103,189,1)"},"error_x":{"color":"rgba(148,103,189,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2561.9,2243,2205.8,1724.9,1522.6,1534.1,1686.6,1695.1,1422.5,1428.2,1663.4,2326.4],"type":"scatter","mode":"lines","line":{"color":"#3B528BFF"},"name":2005,"marker":{"color":"rgba(140,86,75,1)","line":{"color":"rgba(140,86,75,1)"}},"error_y":{"color":"rgba(140,86,75,1)"},"error_x":{"color":"rgba(140,86,75,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2165.3,2144.4,2126.4,1681,1526.3,1550.9,1758.7,1751.7,1462.1,1644.2,1765.4,2122.8],"type":"scatter","mode":"lines","line":{"color":"#35608DFF"},"name":2006,"marker":{"color":"rgba(227,119,194,1)","line":{"color":"rgba(227,119,194,1)"}},"error_y":{"color":"rgba(227,119,194,1)"},"error_x":{"color":"rgba(227,119,194,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2475.6,2567,2128.8,1810.1,1559.1,1555.2,1659.9,1896.1,1590.5,1627.8,1834.5,2399.2],"type":"scatter","mode":"lines","line":{"color":"#2F6C8EFF"},"name":2007,"marker":{"color":"rgba(127,127,127,1)","line":{"color":"rgba(127,127,127,1)"}},"error_y":{"color":"rgba(127,127,127,1)"},"error_x":{"color":"rgba(127,127,127,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2734,2503.4,2278.2,1823.9,1576.4,1604.2,1708.6,1682.9,1460.9,1635.8,1868.9,2399.7],"type":"scatter","mode":"lines","line":{"color":"#2A788EFF"},"name":2008,"marker":{"color":"rgba(188,189,34,1)","line":{"color":"rgba(188,189,34,1)"}},"error_y":{"color":"rgba(188,189,34,1)"},"error_x":{"color":"rgba(188,189,34,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2729.7,2332.5,2170.7,1741.3,1504,1527.8,1658,1736.5,1575,1666.5,1776.2,2491.9],"type":"scatter","mode":"lines","line":{"color":"#25848EFF"},"name":2009,"marker":{"color":"rgba(23,190,207,1)","line":{"color":"rgba(23,190,207,1)"}},"error_y":{"color":"rgba(23,190,207,1)"},"error_x":{"color":"rgba(23,190,207,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2809.8,2481,2142.9,1691.8,1617.3,1649.5,1825.8,1878.9,1637.5,1664.9,1973.3,2714.1],"type":"scatter","mode":"lines","line":{"color":"#21908CFF"},"name":2010,"marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2888.6,2452.4,2230.5,1825,1667.4,1657.3,1890.5,1891.8,1655.6,1744.5,2031.9,2541.9],"type":"scatter","mode":"lines","line":{"color":"#1E9C89FF"},"name":2011,"marker":{"color":"rgba(255,127,14,1)","line":{"color":"rgba(255,127,14,1)"}},"error_y":{"color":"rgba(255,127,14,1)"},"error_x":{"color":"rgba(255,127,14,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2756.2,2500.7,2127.8,1953.1,1873.8,1868.4,2069.8,2008.8,1807.2,1901.1,2167.8,2503.9],"type":"scatter","mode":"lines","line":{"color":"#22A884FF"},"name":2012,"marker":{"color":"rgba(44,160,44,1)","line":{"color":"rgba(44,160,44,1)"}},"error_y":{"color":"rgba(44,160,44,1)"},"error_x":{"color":"rgba(44,160,44,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2878.8,2567.2,2521.1,1967.5,1752.5,1742.9,1926.3,1927.4,1767,1866.8,2316.9,2920.8],"type":"scatter","mode":"lines","line":{"color":"#2FB47CFF"},"name":2013,"marker":{"color":"rgba(214,39,40,1)","line":{"color":"rgba(214,39,40,1)"}},"error_y":{"color":"rgba(214,39,40,1)"},"error_x":{"color":"rgba(214,39,40,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3204.1,2741.2,2557.9,1961.7,1810.2,1745.4,1881,1933.1,1809.3,1912.8,2357.5,2679.2],"type":"scatter","mode":"lines","line":{"color":"#43BF71FF"},"name":2014,"marker":{"color":"rgba(148,103,189,1)","line":{"color":"rgba(148,103,189,1)"}},"error_y":{"color":"rgba(148,103,189,1)"},"error_x":{"color":"rgba(148,103,189,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3115,2925.2,2591.3,2007.9,1858.1,1899.9,2067.7,2052.7,1901.3,1987.3,2249.1,2588.2],"type":"scatter","mode":"lines","line":{"color":"#5DC863FF"},"name":2015,"marker":{"color":"rgba(140,86,75,1)","line":{"color":"rgba(140,86,75,1)"}},"error_y":{"color":"rgba(140,86,75,1)"},"error_x":{"color":"rgba(140,86,75,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3091.7,2652.3,2356.3,2083.8,1965.8,2000.7,2186.6,2208.4,1947.8,1925.2,2159.4,2866.3],"type":"scatter","mode":"lines","line":{"color":"#7AD151FF"},"name":2016,"marker":{"color":"rgba(227,119,194,1)","line":{"color":"rgba(227,119,194,1)"}},"error_y":{"color":"rgba(227,119,194,1)"},"error_x":{"color":"rgba(227,119,194,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[2913.8,2340.2,2523.3,1932,1892,1910.4,2141.6,2093.8,1920.5,2031.5,2357.3,3086],"type":"scatter","mode":"lines","line":{"color":"#9AD93CFF"},"name":2017,"marker":{"color":"rgba(127,127,127,1)","line":{"color":"rgba(127,127,127,1)"}},"error_y":{"color":"rgba(127,127,127,1)"},"error_x":{"color":"rgba(127,127,127,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3340.9,2710.7,2796.7,2350.5,2055,2063.1,2350.7,2313.8,2156.1,2285.9,2715.9,2999.5],"type":"scatter","mode":"lines","line":{"color":"#BBDF27FF"},"name":2018,"marker":{"color":"rgba(188,189,34,1)","line":{"color":"rgba(188,189,34,1)"}},"error_y":{"color":"rgba(188,189,34,1)"},"error_x":{"color":"rgba(188,189,34,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"y":[3409.3,3010.3,2906.9,2205,2126.1,2119.4,2409.5,2440.7,2217.3,2328,2778.6,3148.1],"type":"scatter","mode":"lines","line":{"color":"#DEE318FF"},"name":2019,"marker":{"color":"rgba(23,190,207,1)","line":{"color":"rgba(23,190,207,1)"}},"error_y":{"color":"rgba(23,190,207,1)"},"error_x":{"color":"rgba(23,190,207,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],"y":[3293.2,3035.9,2709.2,2243.9,2068.4,2135.6,2494.7,2350.9],"type":"scatter","mode":"lines","line":{"color":"#FDE725FF"},"name":2020,"marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p><strong>Note:</strong> that we use a color scale to mark the years. This enables us to quickly observe the series’ growth from year to year and the seasonal pattern.</p>
+<p>Similarly, we can split the series by its frequency units and plot each frequency unit against the frequency cycle (e.g., year):</p>
+<pre class="r"><code>p &lt;- plot_ly()
+
+for(i in unique(us_gas$month)){
+  m &lt;- NULL
+  
+  m &lt;- us_gas %&gt;%
+    as.data.frame() %&gt;%
+    filter(month == i)
+  
+  p &lt;- p %&gt;% 
+    add_lines(x = m$year,
+              y = m$y,
+              name = i)
+}
+
+p</code></pre>
+<div id="htmlwidget-f36520f2d4444b33a8d1" style="width:768px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-f36520f2d4444b33a8d1">{"x":{"visdat":{"6aa777b3fd37":["function () ","plotlyVisDat"]},"cur_data":"6aa777b3fd37","attrs":{"6aa777b3fd37":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[2510.5,2677,2487.6,2700.5,2675.8,2561.9,2165.3,2475.6,2734,2729.7,2809.8,2888.6,2756.2,2878.8,3204.1,3115,3091.7,2913.8,3340.9,3409.3,3293.2],"type":"scatter","mode":"lines","name":"Jan","inherit":true},"6aa777b3fd37.1":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[2330.7,2309.5,2242.4,2500.3,2511.1,2243,2144.4,2567,2503.4,2332.5,2481,2452.4,2500.7,2567.2,2741.2,2925.2,2652.3,2340.2,2710.7,3010.3,3035.9],"type":"scatter","mode":"lines","name":"Feb","inherit":true},"6aa777b3fd37.2":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[2050.6,2246.6,2258.4,2197.9,2100.9,2205.8,2126.4,2128.8,2278.2,2170.7,2142.9,2230.5,2127.8,2521.1,2557.9,2591.3,2356.3,2523.3,2796.7,2906.9,2709.2],"type":"scatter","mode":"lines","name":"Mar","inherit":true},"6aa777b3fd37.3":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1783.3,1807.2,1881,1743.5,1745.2,1724.9,1681,1810.1,1823.9,1741.3,1691.8,1825,1953.1,1967.5,1961.7,2007.9,2083.8,1932,2350.5,2205,2243.9],"type":"scatter","mode":"lines","name":"Apr","inherit":true},"6aa777b3fd37.4":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1632.9,1522.4,1611.5,1514.7,1573,1522.6,1526.3,1559.1,1576.4,1504,1617.3,1667.4,1873.8,1752.5,1810.2,1858.1,1965.8,1892,2055,2126.1,2068.4],"type":"scatter","mode":"lines","name":"May","inherit":true},"6aa777b3fd37.5":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1513.1,1444.4,1591.4,1368.4,1483.7,1534.1,1550.9,1555.2,1604.2,1527.8,1649.5,1657.3,1868.4,1742.9,1745.4,1899.9,2000.7,1910.4,2063.1,2119.4,2135.6],"type":"scatter","mode":"lines","name":"Jun","inherit":true},"6aa777b3fd37.6":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1525.6,1598.1,1748.4,1600.5,1584.9,1686.6,1758.7,1659.9,1708.6,1658,1825.8,1890.5,2069.8,1926.3,1881,2067.7,2186.6,2141.6,2350.7,2409.5,2494.7],"type":"scatter","mode":"lines","name":"Jul","inherit":true},"6aa777b3fd37.7":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1653.1,1669.2,1725.7,1651.6,1578,1695.1,1751.7,1896.1,1682.9,1736.5,1878.9,1891.8,2008.8,1927.4,1933.1,2052.7,2208.4,2093.8,2313.8,2440.7,2350.9],"type":"scatter","mode":"lines","name":"Aug","inherit":true},"6aa777b3fd37.8":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019],"y":[1475,1494.1,1542.2,1428.6,1482.2,1422.5,1462.1,1590.5,1460.9,1575,1637.5,1655.6,1807.2,1767,1809.3,1901.3,1947.8,1920.5,2156.1,2217.3],"type":"scatter","mode":"lines","name":"Sep","inherit":true},"6aa777b3fd37.9":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019],"y":[1567.8,1649.1,1645.9,1553.2,1557.2,1428.2,1644.2,1627.8,1635.8,1666.5,1664.9,1744.5,1901.1,1866.8,1912.8,1987.3,1925.2,2031.5,2285.9,2328],"type":"scatter","mode":"lines","name":"Oct","inherit":true},"6aa777b3fd37.10":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019],"y":[1908.5,1701,1913.6,1753.6,1782.8,1663.4,1765.4,1834.5,1868.9,1776.2,1973.3,2031.9,2167.8,2316.9,2357.5,2249.1,2159.4,2357.3,2715.9,2778.6],"type":"scatter","mode":"lines","name":"Nov","inherit":true},"6aa777b3fd37.11":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019],"y":[2587.5,2120.2,2378.9,2263.7,2327.7,2326.4,2122.8,2399.2,2399.7,2491.9,2714.1,2541.9,2503.9,2920.8,2679.2,2588.2,2866.3,3086,2999.5,3148.1],"type":"scatter","mode":"lines","name":"Dec","inherit":true}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":[]},"yaxis":{"domain":[0,1],"automargin":true,"title":[]},"hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false},"data":[{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[2510.5,2677,2487.6,2700.5,2675.8,2561.9,2165.3,2475.6,2734,2729.7,2809.8,2888.6,2756.2,2878.8,3204.1,3115,3091.7,2913.8,3340.9,3409.3,3293.2],"type":"scatter","mode":"lines","name":"Jan","marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"line":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[2330.7,2309.5,2242.4,2500.3,2511.1,2243,2144.4,2567,2503.4,2332.5,2481,2452.4,2500.7,2567.2,2741.2,2925.2,2652.3,2340.2,2710.7,3010.3,3035.9],"type":"scatter","mode":"lines","name":"Feb","marker":{"color":"rgba(255,127,14,1)","line":{"color":"rgba(255,127,14,1)"}},"error_y":{"color":"rgba(255,127,14,1)"},"error_x":{"color":"rgba(255,127,14,1)"},"line":{"color":"rgba(255,127,14,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[2050.6,2246.6,2258.4,2197.9,2100.9,2205.8,2126.4,2128.8,2278.2,2170.7,2142.9,2230.5,2127.8,2521.1,2557.9,2591.3,2356.3,2523.3,2796.7,2906.9,2709.2],"type":"scatter","mode":"lines","name":"Mar","marker":{"color":"rgba(44,160,44,1)","line":{"color":"rgba(44,160,44,1)"}},"error_y":{"color":"rgba(44,160,44,1)"},"error_x":{"color":"rgba(44,160,44,1)"},"line":{"color":"rgba(44,160,44,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1783.3,1807.2,1881,1743.5,1745.2,1724.9,1681,1810.1,1823.9,1741.3,1691.8,1825,1953.1,1967.5,1961.7,2007.9,2083.8,1932,2350.5,2205,2243.9],"type":"scatter","mode":"lines","name":"Apr","marker":{"color":"rgba(214,39,40,1)","line":{"color":"rgba(214,39,40,1)"}},"error_y":{"color":"rgba(214,39,40,1)"},"error_x":{"color":"rgba(214,39,40,1)"},"line":{"color":"rgba(214,39,40,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1632.9,1522.4,1611.5,1514.7,1573,1522.6,1526.3,1559.1,1576.4,1504,1617.3,1667.4,1873.8,1752.5,1810.2,1858.1,1965.8,1892,2055,2126.1,2068.4],"type":"scatter","mode":"lines","name":"May","marker":{"color":"rgba(148,103,189,1)","line":{"color":"rgba(148,103,189,1)"}},"error_y":{"color":"rgba(148,103,189,1)"},"error_x":{"color":"rgba(148,103,189,1)"},"line":{"color":"rgba(148,103,189,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1513.1,1444.4,1591.4,1368.4,1483.7,1534.1,1550.9,1555.2,1604.2,1527.8,1649.5,1657.3,1868.4,1742.9,1745.4,1899.9,2000.7,1910.4,2063.1,2119.4,2135.6],"type":"scatter","mode":"lines","name":"Jun","marker":{"color":"rgba(140,86,75,1)","line":{"color":"rgba(140,86,75,1)"}},"error_y":{"color":"rgba(140,86,75,1)"},"error_x":{"color":"rgba(140,86,75,1)"},"line":{"color":"rgba(140,86,75,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1525.6,1598.1,1748.4,1600.5,1584.9,1686.6,1758.7,1659.9,1708.6,1658,1825.8,1890.5,2069.8,1926.3,1881,2067.7,2186.6,2141.6,2350.7,2409.5,2494.7],"type":"scatter","mode":"lines","name":"Jul","marker":{"color":"rgba(227,119,194,1)","line":{"color":"rgba(227,119,194,1)"}},"error_y":{"color":"rgba(227,119,194,1)"},"error_x":{"color":"rgba(227,119,194,1)"},"line":{"color":"rgba(227,119,194,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"y":[1653.1,1669.2,1725.7,1651.6,1578,1695.1,1751.7,1896.1,1682.9,1736.5,1878.9,1891.8,2008.8,1927.4,1933.1,2052.7,2208.4,2093.8,2313.8,2440.7,2350.9],"type":"scatter","mode":"lines","name":"Aug","marker":{"color":"rgba(127,127,127,1)","line":{"color":"rgba(127,127,127,1)"}},"error_y":{"color":"rgba(127,127,127,1)"},"error_x":{"color":"rgba(127,127,127,1)"},"line":{"color":"rgba(127,127,127,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019],"y":[1475,1494.1,1542.2,1428.6,1482.2,1422.5,1462.1,1590.5,1460.9,1575,1637.5,1655.6,1807.2,1767,1809.3,1901.3,1947.8,1920.5,2156.1,2217.3],"type":"scatter","mode":"lines","name":"Sep","marker":{"color":"rgba(188,189,34,1)","line":{"color":"rgba(188,189,34,1)"}},"error_y":{"color":"rgba(188,189,34,1)"},"error_x":{"color":"rgba(188,189,34,1)"},"line":{"color":"rgba(188,189,34,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019],"y":[1567.8,1649.1,1645.9,1553.2,1557.2,1428.2,1644.2,1627.8,1635.8,1666.5,1664.9,1744.5,1901.1,1866.8,1912.8,1987.3,1925.2,2031.5,2285.9,2328],"type":"scatter","mode":"lines","name":"Oct","marker":{"color":"rgba(23,190,207,1)","line":{"color":"rgba(23,190,207,1)"}},"error_y":{"color":"rgba(23,190,207,1)"},"error_x":{"color":"rgba(23,190,207,1)"},"line":{"color":"rgba(23,190,207,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019],"y":[1908.5,1701,1913.6,1753.6,1782.8,1663.4,1765.4,1834.5,1868.9,1776.2,1973.3,2031.9,2167.8,2316.9,2357.5,2249.1,2159.4,2357.3,2715.9,2778.6],"type":"scatter","mode":"lines","name":"Nov","marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"line":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019],"y":[2587.5,2120.2,2378.9,2263.7,2327.7,2326.4,2122.8,2399.2,2399.7,2491.9,2714.1,2541.9,2503.9,2920.8,2679.2,2588.2,2866.3,3086,2999.5,3148.1],"type":"scatter","mode":"lines","name":"Dec","marker":{"color":"rgba(255,127,14,1)","line":{"color":"rgba(255,127,14,1)"}},"error_y":{"color":"rgba(255,127,14,1)"},"error_x":{"color":"rgba(255,127,14,1)"},"line":{"color":"rgba(255,127,14,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="heatmap" class="section level4">
+<h4>Heatmap</h4>
+<p>Heatmap is another visualization tool for reviewing and identifying a seasonal pattern in a series:</p>
+<pre class="r"><code>us_gas_df &lt;- us_gas %&gt;%
+  as.data.frame() %&gt;%
+  select(year, month, y) %&gt;%
+  tidyr::pivot_wider(names_from = year,
+                     values_from = y)
+
+
+plot_ly(x = names(us_gas_df)[-1],
+        y = us_gas_df$month,
+        z = as.matrix(us_gas_df[, -1]),
+        colors = &quot;Reds&quot;,
+        xgap = 3,
+        ygap = 3,
+        type = &quot;heatmap&quot;)</code></pre>
+<div id="htmlwidget-98096005788e7bc4f09e" style="width:768px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-98096005788e7bc4f09e">{"x":{"visdat":{"6aa72388ae78":["function () ","plotlyVisDat"]},"cur_data":"6aa72388ae78","attrs":{"6aa72388ae78":{"x":["2000","2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020"],"y":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"z":[[2510.5,2677,2487.6,2700.5,2675.8,2561.9,2165.3,2475.6,2734,2729.7,2809.8,2888.6,2756.2,2878.8,3204.1,3115,3091.7,2913.8,3340.9,3409.3,3293.2],[2330.7,2309.5,2242.4,2500.3,2511.1,2243,2144.4,2567,2503.4,2332.5,2481,2452.4,2500.7,2567.2,2741.2,2925.2,2652.3,2340.2,2710.7,3010.3,3035.9],[2050.6,2246.6,2258.4,2197.9,2100.9,2205.8,2126.4,2128.8,2278.2,2170.7,2142.9,2230.5,2127.8,2521.1,2557.9,2591.3,2356.3,2523.3,2796.7,2906.9,2709.2],[1783.3,1807.2,1881,1743.5,1745.2,1724.9,1681,1810.1,1823.9,1741.3,1691.8,1825,1953.1,1967.5,1961.7,2007.9,2083.8,1932,2350.5,2205,2243.9],[1632.9,1522.4,1611.5,1514.7,1573,1522.6,1526.3,1559.1,1576.4,1504,1617.3,1667.4,1873.8,1752.5,1810.2,1858.1,1965.8,1892,2055,2126.1,2068.4],[1513.1,1444.4,1591.4,1368.4,1483.7,1534.1,1550.9,1555.2,1604.2,1527.8,1649.5,1657.3,1868.4,1742.9,1745.4,1899.9,2000.7,1910.4,2063.1,2119.4,2135.6],[1525.6,1598.1,1748.4,1600.5,1584.9,1686.6,1758.7,1659.9,1708.6,1658,1825.8,1890.5,2069.8,1926.3,1881,2067.7,2186.6,2141.6,2350.7,2409.5,2494.7],[1653.1,1669.2,1725.7,1651.6,1578,1695.1,1751.7,1896.1,1682.9,1736.5,1878.9,1891.8,2008.8,1927.4,1933.1,2052.7,2208.4,2093.8,2313.8,2440.7,2350.9],[1475,1494.1,1542.2,1428.6,1482.2,1422.5,1462.1,1590.5,1460.9,1575,1637.5,1655.6,1807.2,1767,1809.3,1901.3,1947.8,1920.5,2156.1,2217.3,null],[1567.8,1649.1,1645.9,1553.2,1557.2,1428.2,1644.2,1627.8,1635.8,1666.5,1664.9,1744.5,1901.1,1866.8,1912.8,1987.3,1925.2,2031.5,2285.9,2328,null],[1908.5,1701,1913.6,1753.6,1782.8,1663.4,1765.4,1834.5,1868.9,1776.2,1973.3,2031.9,2167.8,2316.9,2357.5,2249.1,2159.4,2357.3,2715.9,2778.6,null],[2587.5,2120.2,2378.9,2263.7,2327.7,2326.4,2122.8,2399.2,2399.7,2491.9,2714.1,2541.9,2503.9,2920.8,2679.2,2588.2,2866.3,3086,2999.5,3148.1,null]],"xgap":3,"ygap":3,"colors":"Reds","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"heatmap"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":[]},"yaxis":{"domain":[0,1],"automargin":true,"title":[]},"scene":{"zaxis":{"title":[]}},"hovermode":"closest","showlegend":false,"legend":{"yanchor":"top","y":0.5}},"source":"A","config":{"showSendToCloud":false},"data":[{"colorbar":{"title":"","ticklen":2,"len":0.5,"lenmode":"fraction","y":1,"yanchor":"top"},"colorscale":[["0","rgba(255,245,240,1)"],["0.0416666666666666","rgba(255,238,230,1)"],["0.0833333333333334","rgba(255,231,220,1)"],["0.125","rgba(254,224,210,1)"],["0.166666666666667","rgba(254,212,193,1)"],["0.208333333333333","rgba(253,199,177,1)"],["0.25","rgba(252,187,161,1)"],["0.291666666666667","rgba(253,174,145,1)"],["0.333333333333333","rgba(253,160,129,1)"],["0.375","rgba(252,146,114,1)"],["0.416666666666667","rgba(252,133,101,1)"],["0.458333333333333","rgba(252,120,87,1)"],["0.5","rgba(251,106,74,1)"],["0.541666666666667","rgba(247,92,64,1)"],["0.583333333333333","rgba(243,77,54,1)"],["0.625","rgba(239,59,44,1)"],["0.666666666666667","rgba(227,49,39,1)"],["0.708333333333333","rgba(215,37,34,1)"],["0.75","rgba(203,24,29,1)"],["0.791666666666667","rgba(190,21,26,1)"],["0.833333333333333","rgba(178,18,24,1)"],["0.875","rgba(165,15,21,1)"],["0.916666666666667","rgba(144,9,19,1)"],["0.958333333333333","rgba(123,3,16,1)"],["1","rgba(103,0,13,1)"]],"showscale":true,"x":["2000","2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020"],"y":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"z":[[2510.5,2677,2487.6,2700.5,2675.8,2561.9,2165.3,2475.6,2734,2729.7,2809.8,2888.6,2756.2,2878.8,3204.1,3115,3091.7,2913.8,3340.9,3409.3,3293.2],[2330.7,2309.5,2242.4,2500.3,2511.1,2243,2144.4,2567,2503.4,2332.5,2481,2452.4,2500.7,2567.2,2741.2,2925.2,2652.3,2340.2,2710.7,3010.3,3035.9],[2050.6,2246.6,2258.4,2197.9,2100.9,2205.8,2126.4,2128.8,2278.2,2170.7,2142.9,2230.5,2127.8,2521.1,2557.9,2591.3,2356.3,2523.3,2796.7,2906.9,2709.2],[1783.3,1807.2,1881,1743.5,1745.2,1724.9,1681,1810.1,1823.9,1741.3,1691.8,1825,1953.1,1967.5,1961.7,2007.9,2083.8,1932,2350.5,2205,2243.9],[1632.9,1522.4,1611.5,1514.7,1573,1522.6,1526.3,1559.1,1576.4,1504,1617.3,1667.4,1873.8,1752.5,1810.2,1858.1,1965.8,1892,2055,2126.1,2068.4],[1513.1,1444.4,1591.4,1368.4,1483.7,1534.1,1550.9,1555.2,1604.2,1527.8,1649.5,1657.3,1868.4,1742.9,1745.4,1899.9,2000.7,1910.4,2063.1,2119.4,2135.6],[1525.6,1598.1,1748.4,1600.5,1584.9,1686.6,1758.7,1659.9,1708.6,1658,1825.8,1890.5,2069.8,1926.3,1881,2067.7,2186.6,2141.6,2350.7,2409.5,2494.7],[1653.1,1669.2,1725.7,1651.6,1578,1695.1,1751.7,1896.1,1682.9,1736.5,1878.9,1891.8,2008.8,1927.4,1933.1,2052.7,2208.4,2093.8,2313.8,2440.7,2350.9],[1475,1494.1,1542.2,1428.6,1482.2,1422.5,1462.1,1590.5,1460.9,1575,1637.5,1655.6,1807.2,1767,1809.3,1901.3,1947.8,1920.5,2156.1,2217.3,null],[1567.8,1649.1,1645.9,1553.2,1557.2,1428.2,1644.2,1627.8,1635.8,1666.5,1664.9,1744.5,1901.1,1866.8,1912.8,1987.3,1925.2,2031.5,2285.9,2328,null],[1908.5,1701,1913.6,1753.6,1782.8,1663.4,1765.4,1834.5,1868.9,1776.2,1973.3,2031.9,2167.8,2316.9,2357.5,2249.1,2159.4,2357.3,2715.9,2778.6,null],[2587.5,2120.2,2378.9,2263.7,2327.7,2326.4,2122.8,2399.2,2399.7,2491.9,2714.1,2541.9,2503.9,2920.8,2679.2,2588.2,2866.3,3086,2999.5,3148.1,null]],"xgap":3,"ygap":3,"type":"heatmap","xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="kernel-density-plot" class="section level4">
+<h4>Kernel Density Plot</h4>
+<p>Likewise in the box-plot seasonal plot, we can use the kernel density plot to visualize the series frequency units distribution. A simple method is to use the <strong>ggplot2</strong> package <code>geom_density</code> function:</p>
+<pre class="r"><code>ggplot(us_gas, aes(x = y)) +
+geom_density(aes(fill = month)) +
+ggtitle(&quot;US Gas - Kernel Density Estimates by Month&quot;) + facet_grid(rows = vars(as.factor(month)))</code></pre>
+<p><img src="seasonal_analysis_files/figure-html/unnamed-chunk-14-1.png" width="768" /></p>
+<p>As before, the detrended series should have narrow distribution:</p>
+<pre class="r"><code>ggplot(us_gas, aes(x = detrend)) +
+geom_density(aes(fill = month)) +
+ggtitle(&quot;US Gas - Kernel Density Estimates by Month&quot;) + facet_grid(rows = vars(as.factor(month)))</code></pre>
+<p><img src="seasonal_analysis_files/figure-html/unnamed-chunk-15-1.png" width="768" /></p>
+</div>
+<div id="seasonal-plots-with-the-feasts-package" class="section level4">
+<h4>Seasonal Plots with the feasts Package</h4>
+<p>The <strong>feasts</strong> package provides some built-in functions for seasonal plots of <code>tsibble</code> objects based on the <strong>ggplot2</strong> package. The <code>gg_season</code> function creates a seasonal plot by the series frequency cycle units. By default, the function labels each line by its frequency cycle unit:</p>
+<pre class="r"><code>us_gas %&gt;%
+gg_season(y, labels = &quot;both&quot;) +
+  ylab(&quot;Billion Cubic Feet&quot;) +
+  xlab(&quot;Month&quot;) +
+  ggtitle(&quot;US Natural Gas Consumption Seasonal Plot&quot;)</code></pre>
+<p><img src="seasonal_analysis_files/figure-html/unnamed-chunk-16-1.png" width="768" /></p>
+<p>The <code>gg_subseries</code> split and plot each frequency unit aginst its frequency cycle unit:</p>
+<pre class="r"><code>us_gas %&gt;%
+  gg_subseries(y) +
+    ylab(&quot;Billion Cubic Feet&quot;) +
+    xlab(&quot;Year&quot;) +
+    ggtitle(&quot;US Natural Gas Consumption by Month&quot;)</code></pre>
+<p><img src="seasonal_analysis_files/figure-html/unnamed-chunk-17-1.png" width="768" /></p>
+</div>
+<div id="exercise" class="section level4">
+<h4>Exercise</h4>
+<p>Create seasonal plots for the US Alcoholic Beverages Sales:</p>
+<pre class="r"><code>us_abs_path &lt;- paste(rprojroot::find_rstudio_root_file(), &quot;data&quot;, &quot;Alcoholic Beverages Sales.csv&quot;, sep = &quot;/&quot;)
+
+us_abs &lt;- read.csv(us_abs_path, stringsAsFactors = FALSE) %&gt;%
+  setNames(c(&quot;date&quot;, &quot;y&quot;)) %&gt;%
+  mutate(index = yearmonth(as.Date(date))) %&gt;%
+  select(-date) %&gt;%
+  as_tsibble(index = index)</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

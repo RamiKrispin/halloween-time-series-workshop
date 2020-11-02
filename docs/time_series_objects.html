@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Rami Krispin" />
+
+<meta name="date" content="2020-10-31" />
+
+<title>Time Series Objects</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="fa fa-home fa-lg"></span>
+     
+    
+  </a>
+</li>
+<li>
+  <a href="resources.html">Resources</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Workshop
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="time_series_objects.html">Time Series Objects</a>
+    </li>
+    <li>
+      <a href="plotting_ts_objects.html">Plotting Time Series Objects</a>
+    </li>
+    <li>
+      <a href="ts-decomposition.html">Decomposition of Time Series</a>
+    </li>
+    <li>
+      <a href="seasonal_analysis.html">Seasonal Analysis</a>
+    </li>
+    <li>
+      <a href="correlation_analysis.html">Correlation Analysis</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Time Series Objects</h1>
+<h4 class="author">Rami Krispin</h4>
+<h4 class="date">10/31/2020</h4>
+
+</div>
+
+
+<p>Time series data describes a sequence of observations that were captured over time. Each data point of the series is associated with a unique timestamp. Typically, the term time series (or series) refers to regular time series data, where:</p>
+<ul>
+<li><strong>Irregular time series -</strong> any time-series data that its observations are not equally spaced in time</li>
+<li><strong>Regular time series -</strong> defines as a sequence of observations that are equally spaced over time (e.g., a constant time interval). Examples of common regular time series data:
+<ul>
+<li>Quarterly GDP</li>
+<li>Monthly unemployment</li>
+<li>Daily water consumption</li>
+<li>Hourly temperatures</li>
+<li>Half hour demand for electricity</li>
+</ul></li>
+</ul>
+<p>In this workshop, we will focus only on <strong>regular</strong> time series data.</p>
+<p>R provides a variety of time series classes and objects. The most common classes are:</p>
+<ul>
+<li><code>ts</code> - R built-in class for time-series objects.It is part of the <strong>stats</strong> package time series analysis and forecasting eco-system. The structure of this class is vector and matrix for <code>mts</code> objects (multiple time series) <code>xts</code>/<code>zoo</code> - flexible format for handling both regular and irregular time series data in a table format. Mainly used for finance applications <code>tsibble</code> - a tidy data format for time series data, fairly similar to the xts/zoo packages</li>
+</ul>
+<p>In this workshop, we will focus on the <code>tsibble</code> class.</p>
+<div id="the-ts-class" class="section level3">
+<h3>The ts class</h3>
+<pre class="r"><code>data(&quot;AirPassengers&quot;)
+
+class(AirPassengers)</code></pre>
+<pre><code>## [1] &quot;ts&quot;</code></pre>
+<pre class="r"><code>AirPassengers</code></pre>
+<pre><code>##      Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+## 1949 112 118 132 129 121 135 148 148 136 119 104 118
+## 1950 115 126 141 135 125 149 170 170 158 133 114 140
+## 1951 145 150 178 163 172 178 199 199 184 162 146 166
+## 1952 171 180 193 181 183 218 230 242 209 191 172 194
+## 1953 196 196 236 235 229 243 264 272 237 211 180 201
+## 1954 204 188 235 227 234 264 302 293 259 229 203 229
+## 1955 242 233 267 269 270 315 364 347 312 274 237 278
+## 1956 284 277 317 313 318 374 413 405 355 306 271 306
+## 1957 315 301 356 348 355 422 465 467 404 347 305 336
+## 1958 340 318 362 348 363 435 491 505 404 359 310 337
+## 1959 360 342 406 396 420 472 548 559 463 407 362 405
+## 1960 417 391 419 461 472 535 622 606 508 461 390 432</code></pre>
+<pre class="r"><code>start(AirPassengers)</code></pre>
+<pre><code>## [1] 1949    1</code></pre>
+<pre class="r"><code>end(AirPassengers)</code></pre>
+<pre><code>## [1] 1960   12</code></pre>
+<pre class="r"><code>time(AirPassengers)</code></pre>
+<pre><code>##          Jan     Feb     Mar     Apr     May     Jun     Jul     Aug     Sep     Oct     Nov     Dec
+## 1949 1949.00 1949.08 1949.17 1949.25 1949.33 1949.42 1949.50 1949.58 1949.67 1949.75 1949.83 1949.92
+## 1950 1950.00 1950.08 1950.17 1950.25 1950.33 1950.42 1950.50 1950.58 1950.67 1950.75 1950.83 1950.92
+## 1951 1951.00 1951.08 1951.17 1951.25 1951.33 1951.42 1951.50 1951.58 1951.67 1951.75 1951.83 1951.92
+## 1952 1952.00 1952.08 1952.17 1952.25 1952.33 1952.42 1952.50 1952.58 1952.67 1952.75 1952.83 1952.92
+## 1953 1953.00 1953.08 1953.17 1953.25 1953.33 1953.42 1953.50 1953.58 1953.67 1953.75 1953.83 1953.92
+## 1954 1954.00 1954.08 1954.17 1954.25 1954.33 1954.42 1954.50 1954.58 1954.67 1954.75 1954.83 1954.92
+## 1955 1955.00 1955.08 1955.17 1955.25 1955.33 1955.42 1955.50 1955.58 1955.67 1955.75 1955.83 1955.92
+## 1956 1956.00 1956.08 1956.17 1956.25 1956.33 1956.42 1956.50 1956.58 1956.67 1956.75 1956.83 1956.92
+## 1957 1957.00 1957.08 1957.17 1957.25 1957.33 1957.42 1957.50 1957.58 1957.67 1957.75 1957.83 1957.92
+## 1958 1958.00 1958.08 1958.17 1958.25 1958.33 1958.42 1958.50 1958.58 1958.67 1958.75 1958.83 1958.92
+## 1959 1959.00 1959.08 1959.17 1959.25 1959.33 1959.42 1959.50 1959.58 1959.67 1959.75 1959.83 1959.92
+## 1960 1960.00 1960.08 1960.17 1960.25 1960.33 1960.42 1960.50 1960.58 1960.67 1960.75 1960.83 1960.92</code></pre>
+<pre class="r"><code>deltat(AirPassengers)</code></pre>
+<pre><code>## [1] 0.0833333</code></pre>
+<pre class="r"><code>frequency(AirPassengers)</code></pre>
+<pre><code>## [1] 12</code></pre>
+<pre class="r"><code>cycle(AirPassengers)</code></pre>
+<pre><code>##      Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+## 1949   1   2   3   4   5   6   7   8   9  10  11  12
+## 1950   1   2   3   4   5   6   7   8   9  10  11  12
+## 1951   1   2   3   4   5   6   7   8   9  10  11  12
+## 1952   1   2   3   4   5   6   7   8   9  10  11  12
+## 1953   1   2   3   4   5   6   7   8   9  10  11  12
+## 1954   1   2   3   4   5   6   7   8   9  10  11  12
+## 1955   1   2   3   4   5   6   7   8   9  10  11  12
+## 1956   1   2   3   4   5   6   7   8   9  10  11  12
+## 1957   1   2   3   4   5   6   7   8   9  10  11  12
+## 1958   1   2   3   4   5   6   7   8   9  10  11  12
+## 1959   1   2   3   4   5   6   7   8   9  10  11  12
+## 1960   1   2   3   4   5   6   7   8   9  10  11  12</code></pre>
+</div>
+<div id="the-tsibble-class" class="section level3">
+<h3>The tsibble class</h3>
+<p>The <strong>tsibble</strong> package provides a tidy data structure and tools for handling regular and irregular time series data. The <code>tsibble</code> class enables to store single and multiple time series objects in a <code>data.frame</code> / <code>tbl</code> format with time awareness attributes.</p>
+<div id="the-tsibble-attributes" class="section level4">
+<h4>The tsibble attributes</h4>
+<p>The <code>tsibble</code> class has a table structure with time awareness. Its main attributes are:</p>
+<ul>
+<li><p>As the <code>tsibble</code> class is based on <code>tbl</code> / <code>data.frame</code> classes, it inherits their attributes and functionalities. Hence, <code>dplyr</code> or other utility tools that can be used with <code>tbl</code> and <code>data.frame</code> objects can be used with <code>tsibble</code> objects</p></li>
+<li><p><code>index</code> - a <code>tsibble</code> object has an <code>index</code> column that defines the timestamp or intervals of the series. The <code>index</code> could have the following date/time classes:</p></li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Interval</strong></th>
+<th><strong>Class</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Annual</td>
+<td><code>integer</code>/<code>double</code></td>
+</tr>
+<tr class="even">
+<td>Quarterly</td>
+<td><code>yearquarter</code></td>
+</tr>
+<tr class="odd">
+<td>Monthly</td>
+<td><code>yearmonth</code></td>
+</tr>
+<tr class="even">
+<td>Weekly</td>
+<td><code>yearweek</code></td>
+</tr>
+<tr class="odd">
+<td>Daily</td>
+<td><code>Date</code>/<code>difftime</code></td>
+</tr>
+<tr class="even">
+<td>Subdaily</td>
+<td><code>POSIXt</code>/<code>difftime</code>/<code>hms</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table source:</strong> the <strong>tsibble</strong> package <a href="https://github.com/tidyverts/tsibble/blob/master/README.md">README</a> file</p>
+<ul>
+<li><p>A <code>tsibble</code> object can represent a multiple time series object in a wide or long format:</p>
+<ul>
+<li><strong>Wide-format -</strong> each column represents a series, and every row share the same index</li>
+<li><strong>Long-format -</strong> with the use of key column/s</li>
+</ul></li>
+<li><p><code>key</code> - optional, enables to represent multiple time series in a long format, by using single or multiple columns as series key/s</p></li>
+</ul>
+</div>
+<div id="creating-a-tsibble-object" class="section level4">
+<h4>Creating a tsibble object</h4>
+<p>The <code>as_tsibble</code> function enables to convert data.frame or ts objects into a tsibble object. In the following example, we will load the <a href="https://fred.stlouisfed.org/series/NATURALGAS">Natural Gas Consumption</a> series. This series represents the monthly consumption of natural gas in the US since January 2000:</p>
+<pre class="r"><code>library(tsibble)
+library(dplyr)
+
+naturalgas_path &lt;- paste(rprojroot::find_rstudio_root_file(), &quot;data&quot;, &quot;NATURALGAS.csv&quot;, sep = &quot;/&quot;)
+
+us_gas &lt;- read.csv(naturalgas_path, stringsAsFactors = FALSE) %&gt;%
+  setNames(c(&quot;date&quot;, &quot;y&quot;)) 
+
+head(us_gas)</code></pre>
+<pre><code>##         date      y
+## 1 2000-01-01 2510.5
+## 2 2000-02-01 2330.7
+## 3 2000-03-01 2050.6
+## 4 2000-04-01 1783.3
+## 5 2000-05-01 1632.9
+## 6 2000-06-01 1513.1</code></pre>
+<pre class="r"><code>str(us_gas)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    248 obs. of  2 variables:
+##  $ date: chr  &quot;2000-01-01&quot; &quot;2000-02-01&quot; &quot;2000-03-01&quot; &quot;2000-04-01&quot; ...
+##  $ y   : num  2510 2331 2051 1783 1633 ...</code></pre>
+<p>This series has two columns:</p>
+<ul>
+<li><code>date</code> - the timestamp of the observations</li>
+<li><code>y</code> - the series values</li>
+</ul>
+<p>We will reformat the <code>date</code> column from <code>character</code> into <code>Date</code> and use this column as the series <code>index</code>:</p>
+<pre class="r"><code>us_gas$date &lt;- as.Date(us_gas$date) %&gt;% yearmonth()
+
+us_gas_tsibble &lt;- us_gas %&gt;% 
+  as_tsibble(index = &quot;date&quot;)
+
+class(us_gas_tsibble)</code></pre>
+<pre><code>## [1] &quot;tbl_ts&quot;     &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>head(us_gas_tsibble)</code></pre>
+<pre><code>## # A tsibble: 6 x 2 [1M]
+##       date     y
+##      &lt;mth&gt; &lt;dbl&gt;
+## 1 2000 Jan 2510.
+## 2 2000 Feb 2331.
+## 3 2000 Mar 2051.
+## 4 2000 Apr 1783.
+## 5 2000 May 1633.
+## 6 2000 Jun 1513.</code></pre>
+<p>As you can see, the <code>tsibble</code> class has <code>tbl</code> alike <code>print</code> method, with additional information about the series intervals, which is monthly. Let’s explore the new object attributes:</p>
+<pre class="r"><code>interval(us_gas_tsibble)</code></pre>
+<pre><code>## &lt;interval[1]&gt;
+## [1] 1M</code></pre>
+<pre class="r"><code>index(us_gas_tsibble)</code></pre>
+<pre><code>## date</code></pre>
+<pre class="r"><code>key(us_gas_tsibble)</code></pre>
+<pre><code>## list()</code></pre>
+<p>Since we did not define a <code>key</code>, the object does not have a key.</p>
+</div>
+<div id="converting-a-ts-object-into-a-tsibble" class="section level4">
+<h4>Converting a ts object into a tsibble</h4>
+<p>The <code>as_tsibble</code> function enables to convet <code>ts</code> object to <code>tsibble</code>. We will use the function to convert the <code>AirPassegers</code> from a <code>ts</code> object to a <code>tsibble</code> object:</p>
+<pre class="r"><code>ap_tsibble &lt;- AirPassengers %&gt;% as_tsibble()
+
+class(ap_tsibble)</code></pre>
+<pre><code>## [1] &quot;tbl_ts&quot;     &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>head(ap_tsibble)</code></pre>
+<pre><code>## # A tsibble: 6 x 2 [1M]
+##      index value
+##      &lt;mth&gt; &lt;dbl&gt;
+## 1 1949 Jan   112
+## 2 1949 Feb   118
+## 3 1949 Mar   132
+## 4 1949 Apr   129
+## 5 1949 May   121
+## 6 1949 Jun   135</code></pre>
+<pre class="r"><code>interval(ap_tsibble)</code></pre>
+<pre><code>## &lt;interval[1]&gt;
+## [1] 1M</code></pre>
+<p>The function convert the ts object time vector into an index object.</p>
+<p>Note: as the time vector of the <code>ts</code> object can represent only two components of the timestamp (e.g., year and month, year and day, etc.), the transformation of the vector into a three or four components timestamp index (such as <code>Date</code> or other classes) might be ambiguous in some cases.</p>
+</div>
+<div id="multiple-time-series-object" class="section level4">
+<h4>Multiple time series object</h4>
+<p>The <code>tourism</code> dataset, from the <strong>tsibble</strong> package, is an example of multiple time series object in a long format. This series descibe the number of overnight trips per quarter across Australia by region, state and purpose:</p>
+<pre class="r"><code>library(tsibble)
+
+data(&quot;tourism&quot;)
+
+class(tourism)</code></pre>
+<pre><code>## [1] &quot;tbl_ts&quot;     &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>head(tourism)</code></pre>
+<pre><code>## # A tsibble: 6 x 5 [1Q]
+## # Key:       Region, State, Purpose [1]
+##   Quarter Region   State           Purpose  Trips
+##     &lt;qtr&gt; &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;    &lt;dbl&gt;
+## 1 1998 Q1 Adelaide South Australia Business  135.
+## 2 1998 Q2 Adelaide South Australia Business  110.
+## 3 1998 Q3 Adelaide South Australia Business  166.
+## 4 1998 Q4 Adelaide South Australia Business  127.
+## 5 1999 Q1 Adelaide South Australia Business  137.
+## 6 1999 Q2 Adelaide South Australia Business  200.</code></pre>
+<p>Where in this case, the <code>Quarter</code> column defines the series <code>index</code> and the <code>Region</code>, <code>State</code>, and <code>Purpose</code> columns defines the series <code>key</code>:</p>
+<pre class="r"><code>index(tourism)</code></pre>
+<pre><code>## Quarter</code></pre>
+<pre class="r"><code>key(tourism)</code></pre>
+<pre><code>## [[1]]
+## Region
+## 
+## [[2]]
+## State
+## 
+## [[3]]
+## Purpose</code></pre>
+<pre class="r"><code>key_vars(tourism)</code></pre>
+<pre><code>## [1] &quot;Region&quot;  &quot;State&quot;   &quot;Purpose&quot;</code></pre>
+<pre class="r"><code>key_data(tourism) %&gt;% head()</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   Region         State           Purpose        .rows
+##   &lt;chr&gt;          &lt;chr&gt;           &lt;chr&gt;    &lt;list&lt;int&gt;&gt;
+## 1 Adelaide       South Australia Business        [80]
+## 2 Adelaide       South Australia Holiday         [80]
+## 3 Adelaide       South Australia Other           [80]
+## 4 Adelaide       South Australia Visiting        [80]
+## 5 Adelaide Hills South Australia Business        [80]
+## 6 Adelaide Hills South Australia Holiday         [80]</code></pre>
+<p>This one of the cases the interaction between <strong>dplyr</strong> and <strong>tsibble</strong> is super useful:</p>
+<pre class="r"><code>sydney &lt;- tourism %&gt;% filter(State == &quot;New South Wales&quot;,
+                             Region == &quot;Sydney&quot;,
+                             Purpose == &quot;Holiday&quot;)
+
+head(sydney)</code></pre>
+<pre><code>## # A tsibble: 6 x 5 [1Q]
+## # Key:       Region, State, Purpose [1]
+##   Quarter Region State           Purpose Trips
+##     &lt;qtr&gt; &lt;chr&gt;  &lt;chr&gt;           &lt;chr&gt;   &lt;dbl&gt;
+## 1 1998 Q1 Sydney New South Wales Holiday  828.
+## 2 1998 Q2 Sydney New South Wales Holiday  531.
+## 3 1998 Q3 Sydney New South Wales Holiday  503.
+## 4 1998 Q4 Sydney New South Wales Holiday  580.
+## 5 1999 Q1 Sydney New South Wales Holiday  465.
+## 6 1999 Q2 Sydney New South Wales Holiday  534.</code></pre>
+<pre class="r"><code>key_data(sydney)</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   Region State           Purpose       .rows
+## * &lt;chr&gt;  &lt;chr&gt;           &lt;chr&gt;   &lt;list&lt;int&gt;&gt;
+## 1 Sydney New South Wales Holiday        [80]</code></pre>
+</div>
+</div>
+<div id="exercises" class="section level3">
+<h3>Exercises</h3>
+<p>Let’s practice what we learned so far:</p>
+<ul>
+<li>Load the Alcoholic Beverages Sales dataset from CSV file (<code>data</code> folder), reformat the timesampt to <code>yearmonth</code> and convert to <code>tsibble</code> object with the <code>as_tsibble</code> function</li>
+</ul>
+<pre class="r"><code>us_abs_path &lt;- paste(rprojroot::find_rstudio_root_file(), &quot;data&quot;, &quot;Alcoholic Beverages Sales.csv&quot;, sep = &quot;/&quot;)
+
+us_abs &lt;- read.csv(naturalgas_path, stringsAsFactors = FALSE) %&gt;%
+  setNames(c(&quot;date&quot;, &quot;y&quot;)) 
+
+head(us_abs)</code></pre>
+<pre><code>##         date      y
+## 1 2000-01-01 2510.5
+## 2 2000-02-01 2330.7
+## 3 2000-03-01 2050.6
+## 4 2000-04-01 1783.3
+## 5 2000-05-01 1632.9
+## 6 2000-06-01 1513.1</code></pre>
+<ul>
+<li>Load the California electricity production by provider dataset - <code>ca_elec.rda</code> file (also in <code>data</code> folder) and convert the <code>data.frame</code> object to <code>tsibble</code> object, where the <code>key</code> of the series should be the <code>operator</code> column</li>
+</ul>
+<pre class="r"><code>ca_elec_path &lt;- paste(rprojroot::find_rstudio_root_file(), &quot;data&quot;, &quot;ca_elec.rda&quot;, sep = &quot;/&quot;)
+
+load(ca_elec_path)
+
+head(ca_elec)</code></pre>
+<pre><code>##             date_time                 operator     y
+## 1 2018-07-01 08:00:00 Pacific Gas and Electric 12522
+## 2 2018-07-01 09:00:00 Pacific Gas and Electric 11745
+## 3 2018-07-01 10:00:00 Pacific Gas and Electric 11200
+## 4 2018-07-01 11:00:00 Pacific Gas and Electric 10822
+## 5 2018-07-01 12:00:00 Pacific Gas and Electric 10644
+## 6 2018-07-01 13:00:00 Pacific Gas and Electric 10559</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
