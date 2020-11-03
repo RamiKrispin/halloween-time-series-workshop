@@ -7,4 +7,28 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-###
+
+### R Packages 
+
+* [bsts](https://cran.r-project.org/web/packages/bsts/index.html) - Bayesian Structural Time Series
+* [fable](https://fable.tidyverts.org/) - Tidy time series forecasting
+* [fabletools](https://fabletools.tidyverts.org/) - General fable features useful for extension packages
+* [feasts](https://feasts.tidyverts.org/) - Feature Extraction And Statistics for Time Series
+* [forecast](https://github.com/robjhyndman/forecast) - forecast package for R
+* [forecastHybrid](https://github.com/ellisp/forecastHybrid) - Convenient functions for ensemble forecasts in R combining approaches from the {forecast} package
+* [modeltime](https://business-science.github.io/modeltime/) - Modeltime unlocks time series models and machine learning in one framework
+* [stats](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/00Index.html) - The R Stats Package
+* [timetk](https://business-science.github.io/timetk/) - A toolkit for working with time series in R
+* [tsfeatures](https://pkg.robjhyndman.com/tsfeatures/) - Time series features
+* [tsibble](https://tsibble.tidyverts.org) - Tidy Temporal Data Frames and Tools
+* [TSstudio](https://github.com/RamiKrispin/TSstudio) - Tools for time series analysis and forecasting
+
+
+### Books
+
+* Forecasting: Principles and Practice, Hyndman & Athanasopoulos
+  * 3rd version (based on the fable package) available [online](https://otexts.com/fpp3/)
+  * 2nd version (based on the forecast package) available [online](https://otexts.com/fpp2/) and [amazon](https://www.amazon.com/Forecasting-principles-practice-Rob-Hyndman/dp/0987507117/ref=sr_1_1?dchild=1&keywords=forecasting+principles+and+practice&qid=1604446808&sr=8-1)
+* Time Series Analysis and Its Applications, Shumway & Stoffer, available [online](https://www.stat.pitt.edu/stoffer/tsa4/index.html) and [amazon](https://www.amazon.com/Time-Analysis-Its-Applications-Statistics/dp/3319524518/ref=sr_1_1?crid=1GPAWU1H15ZH9&dchild=1&keywords=time+series+analysis+and+its+applications+with+r+examples&qid=1604153484&sprefix=time+series+analysis+and+it,aps,224&sr=8-1)
+* Hands-On Time Series Analysis with R, Krispin available on [amazon](https://www.amazon.com/Hands-Time-Analysis-forecasting-visualization/dp/1788629159/ref=sxts_sxwds-bia-wc-p13n1_0?cv_ct_cx=Hands-On+Time+Series+Analysis+with+R&dchild=1&keywords=Hands-On+Time+Series+Analysis+with+R&pd_rd_i=1788629159&pd_rd_r=ae9fce2a-e38a-4a37-add0-137260ce6511&pd_rd_w=1r6LM&pd_rd_wg=TAI72&pf_rd_p=5be4970c-0256-4afe-9550-68021bd84e5b&pf_rd_r=ZYAQ9TT3C5NBB6CTHRT2&psc=1&qid=1604153621&sr=1-1-791c2399-d602-4248-afbb-8a79de2d236f)
+* Practical Time Series Forecasting with R, Shmueli & Lichtendahl, available on [amazon](https://www.amazon.com/Practical-Time-Forecasting-Hands-Analytics/dp/0997847913/ref=sr_1_4?dchild=1&keywords=Hands-On+Time+Series+Analysis+with+R&qid=1604153717&s=books&sr=1-4)
